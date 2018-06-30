@@ -1,6 +1,8 @@
 Dogars
 =======
 
+**Note**: The front end code was removed from this repo, entirely rewritten and moved to [dogars-frontend](https://github.com/shoedrip-unbound/dogars-frontend). Some features were completely removed and may not come back.
+
 Install with ```npm install```. Build with gulp. Edit the service file to use your path if you use 
 systemd.
 
@@ -16,16 +18,13 @@ Read the code of conduct before contributing.
 Features
 ========
 
-- Chatbot to help you use the site
 - Automatic hijacker to automatically dump a disconnected, unregistered opponents team on the chat and forfeit the battle
 - Infer link to the latest battle from the current thread
 - Manage statistics about champ (win, losses, ELO, avatar)
 - Automatically saves replays of battles won by a champ, and links replays to sets it has seen in the battle
 - Allow users to manually upload replays
 - Wall of Fame
-- Allow users to submit banners and images for sets
 - Imported sets validity check
-- Form to anonymously contact admin without requiring an email
 
 Known bugs
 ==========
@@ -33,7 +32,5 @@ Known bugs
 - After a while, Showdown automatically closes the connection if it has
   not been used to transmit data, and a lot of the features rely on
   this.
-
-- The site is ugly on mobile, but deal with it dumb phoneposter.
 
 - Database backup every hour, and preserves every previous backups, just in case.
