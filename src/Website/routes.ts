@@ -20,6 +20,11 @@ router.use(bodyParser.urlencoded({ extended: true }));
 router.use(cookieParser());
 router.use(compression());
 
+router.disable('x-powered-by');
+
 router.use(express.static(settings.ressources + '/public', { lastModified: true }));
 router.use('/api', api);
-router.disable('x-powered-by');
+
+router.get('*', (req, res, next) => {
+	res.sendFile(settings.ressources + '/public/index.html');
+})
