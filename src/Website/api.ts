@@ -35,6 +35,8 @@ async function paginate<T>(coll: Collection<T>, pspp: number, ppage: number, que
     spp > 100 && (spp = 100);
     let page = ppage || 1;
     let total = await coll.count(query);
+    if (total == 0)
+        return [0, []];
     let npages = total / spp + +(total % spp != 0);
     page >= npages && (page = npages - 1);
     let nskip = spp * (page - 1);
