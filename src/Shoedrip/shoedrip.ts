@@ -17,8 +17,8 @@ let getCurrentThread = async () => {
     catalog.forEach(page => {
         page.threads!.forEach(t => {
             if ((t.com && t.com.toLowerCase().indexOf('dogars.ml') != -1 ||
-                (t.sub && t.sub.toLowerCase().indexOf('showderp')) != -1 &&
-                t.no > derp_no)) {
+                t.sub && t.sub.toLowerCase().indexOf('showderp') != -1) &&
+                t.no > derp_no) {
                 derp = t;
                 derp_no = Math.max(t.no, derp_no);
                 found = true;
@@ -82,6 +82,7 @@ export let shoestart = async () => {
             //todo: timeout
             let thread = await timeOutPromise(getCurrentThread(), 30000);
             champ = await timeOutPromise(getCurrentChamp(thread), 30000);
+            console.log(champ, thread);
 
             if (champ.champ_battle != oldbattle && champ.champ_active) {
                 oldbattle = champ.champ_battle;
