@@ -12,10 +12,10 @@ Cringer.install(tests);
 tests.listen(1531, async () => {
     await connection.connect();
     let bdev = new Champ();
-    bdev.champ_name = 'bored dev';
+    bdev.name = 'bored dev';
     bdev.showdown_name = 'bored dev';
-    bdev.champ_trip = 'who cares';
-    bdev.champ_battle = 'https://play.pokemonshowdown.com/battle-gen7randombattle-767096654';
+    bdev.trip = 'who cares';
+    bdev.current_battle = 'https://play.pokemonshowdown.com/battle-gen7randombattle-770131763';
     let bm = new BattleMonitor(bdev);
     await bm.monitor();
 });
