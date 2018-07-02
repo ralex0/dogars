@@ -15,6 +15,7 @@ import * as db from '../Backend/mongo';
 import { Sets } from '../Backend/Models/Sets';
 import { Replay } from '../Backend/Models/Replay';
 import { decompose, banners, getSetOfTheDay } from './utils';
+import { champ } from '../Shoedrip/shoedrip';
 
 let upload = multer({ dest: '/tmp' });
 
@@ -46,6 +47,10 @@ async function paginate<T>(coll: Collection<T>, pspp: number, ppage: number, que
 api.get('/sets', async (request, response) => {
     let res = await paginate(db.SetsCollection, +request.query.spp, +request.query.page);
     response.json(res);
+});
+
+api.get('/champ', async (req, res) => {
+    res.json(champ);
 });
 
 api.get('/fame', async (request, response) => {
@@ -94,7 +99,11 @@ api.delete('/sets/:id', async (request, response) => {
 });
 
 api.get('/champs', async (req, res) => {
-    let r = await paginate(db.ChampsCollection, +req.query.spp, +req.query.page);
+    let sort = 'wins';
+    let allowed = ['wins', 'loses', 'elo'];
+    if (allowed.includes(req.query.sort))
+        sort = req.query.sort;
+    let r = await paginate(db.ChampsCollection, +req.query.spp, +req.query.page, {}, {[sort]: 1});
     res.json(r);
 });
 

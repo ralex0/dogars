@@ -1,5 +1,5 @@
 import { PSRoom } from './PSRoom';
-import { PSLeaveMessage, PSWinMessage, PSChatMessage, PSJoinMessage, PSPlayerDecl, PSSwitchMessage, PSFaintMessage } from './PSMessage';
+import { PSLeaveMessage, PSWinMessage, PSChatMessage, PSJoinMessage, PSPlayerDecl, PSSwitchMessage, PSFaintMessage, PSMessage, PSBattleMessage } from './PSMessage';
 import { Player } from './Player';
 import { connection, PSConnection } from './PSConnection';
 import { PlayerHijack } from './PlayerHijack';
@@ -14,6 +14,7 @@ import { Champ } from '../Shoedrip/Champ'
 import { levenshtein, snooze } from '../Website/utils';
 
 export class BattleMonitor {
+	[_: string]: any;
 	con: Player;
 	reg: boolean;
 	stopped: boolean;
@@ -23,9 +24,9 @@ export class BattleMonitor {
 	room: PSRoom;
 	battlers: Map<string, Champ> = new Map<string, Champ>();
 	compiler: CringCompilation;
-	events: { [idx: string]: (ev: any) => Promise<void> } = {};
 	cringeReady: boolean = false;
 	hi: string[] = [];
+	filter: { [key: string]: number | undefined } = {};
 
 	constructor(pchamp: Champ, isreg: boolean = true) {
 		this.con = connection;
@@ -37,29 +38,15 @@ export class BattleMonitor {
 		this.battleData.champ = this.champ;
 		this.battleData.memes = [];
 		this.battleData.dist = 100;
-		this.compiler = new CringCompilation(this.champ.champ_battle);
-		this.battleData.roomid = this.champ.champ_battle.match(/battle-(.*)\/?/)![0];
-		this.room = this.con.tryJoin(this.champ.champ_battle.match(/(battle-.*)\/?/)![0]);
+		this.compiler = new CringCompilation(this.champ.current_battle);
+		this.battleData.roomid = this.champ.current_battle.match(/battle-(.*)\/?/)![0];
+		this.room = this.con.tryJoin(this.champ.current_battle.match(/(battle-.*)\/?/)![0]);
 		//		this.room = this.con.joinRoom();
 
 		this.compiler.init().then(async () => {
 			await snooze(5000);
 			this.cringeReady = true;
 		});
-
-		this.events = {
-			l: this.l,
-			win: this.win,
-			"switch": this.switch,
-			player: this.player,
-			faint: this.faint,
-			c: this.c,
-			j: this.j,
-			inactive: this.inactive
-		};
-	}
-
-	async inactive(mes: PSJoinMessage) {
 	}
 
 	async j(mes: PSJoinMessage) {
@@ -69,9 +56,12 @@ export class BattleMonitor {
 		}
 	}
 
+	async inactive(mes: PSJoinMessage) {
+		return;
+	}
+
 	async c(mes: PSChatMessage) {
 		let norm = mes.content.toLowerCase();
-		let filter: {[key: string]: number | undefined} = {};
 		let mapper = [{
 			test: /hi dogars-?chan/i,
 			fun: async () => {
@@ -87,10 +77,10 @@ export class BattleMonitor {
 					return;
 				if (mes.username.includes('dogars'))
 					return;
-				let usertests = filter[mes.username] || 0;
+				let usertests = this.filter[mes.username] || 0;
 				if (usertests >= 3)
 					return;
-				filter[mes.username] = usertests + 1;
+				this.filter[mes.username] = usertests + 1;
 				await this.compiler.snap();
 				this.con.message(this.room.room, "Yep. This one's going in my cringe compilation.");
 			}
@@ -103,8 +93,8 @@ export class BattleMonitor {
 	async monitor() {
 		while (!this.stopped) {
 			let event = await this.room.read();
-			if (this.events[event.name])
-				await this.events[event.name].apply(this, [event]);
+			if (this[event.name])
+				await this[event.name].apply(this, [event]);
 		}
 	}
 
@@ -123,6 +113,8 @@ export class BattleMonitor {
 				return;
 			this.attemptedJack = true;
 			let hj = new PlayerHijack(this.battleData, this.battlers);
+			// todo: check if opponent is regged here
+			// possible source of crash
 			hj.tryJack(false);
 		}
 	}
@@ -144,7 +136,7 @@ export class BattleMonitor {
 		nc.avatar = pl.avatar;
 
 		this.battlers.set(pl.alias, nc);
-		let dist = levenshtein(this.battleData.champ!.champ_name || '', pl.showdown_name);
+		let dist = levenshtein(this.battleData.champ!.name || '', pl.showdown_name);
 		if (dist < this.battleData.dist!) {
 			this.battleData.champ!.showdown_name = pl.showdown_name;
 			this.battleData.champ!.avatar = pl.avatar;

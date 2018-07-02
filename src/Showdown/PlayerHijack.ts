@@ -60,8 +60,11 @@ export class PlayerHijack {
 				return;
 			//this.bot = new Player(settings.showdown.user, settings.showdown.pass);
 			await this.account.connect();
+			if (this.account.con.challstrraw.indexOf(';') != -1)
+				return;
 			this.account.tryJoin(this.room);
 			this.account.message(this.room, 'Hi, my name is J.A.C.K., brought to you by D*gars©');
+			// mayblock here
 			let myteam = await this.account.getMyTeam(this.room)!;
 			for (let mon of myteam!) {
 				let desc = [mon.details, mon.condition, mon.item, mon.baseAbility,

@@ -1,9 +1,0 @@
-<div class="page_select">
-	<div class="controls">
-		<a href="/all?page=0"><i class="fa fa-fw fa-fast-backward"></i></a>
-		<a {{#has_prev}}href="/all?page={{prev}}"{{/has_prev}} {{^has_prev}}class="not-active"{{/has_prev}}><i class="fa fa-fw fa-flip-horizontal fa-play"></i></a>
-		{{current_page}} / {{npages}}
-		<a {{#next}}href="/all?page={{next}}"{{/next}} {{^next}}class="not-active"{{/next}}><i class="fa fa-fw fa-play"></i></a>
-		<a href="/all?page={{lastpage}}"><i class="fa fa-fw fa-fast-forward"></i></a>
-	</div>
-</div>

@@ -33,13 +33,7 @@ let getCurrentThread = async () => {
 let getCurrentChamp = async (thread: fchan.Thread) => {
     let derp_no = 0;
     let champ = <Champ>{
-        champ_name: '',
-        champ_trip: '',
-        champ_last_active: 0,
-        champ_active: false,
         avatar: '166',
-        champ_battle: '',
-        showdown_name: ''
     };
     for (let i = thread.posts!.length - 1; i != 0; --i) {
         if (!thread.posts![i].trip)
@@ -49,21 +43,19 @@ let getCurrentChamp = async (thread: fchan.Thread) => {
         if ((matches = content.match(/(https?:\/\/)?play.pokemonshowdown.com\/battle-(.*)-([0-9]*)/g))) {
             let curtime = ~~(+new Date() / 1000);
             champ = <Champ>{
-                champ_name: thread.posts![i].name,
-                champ_trip: thread.posts![i].trip,
-                champ_last_active: thread.posts![i].time,
-                avatar: '166',
-                champ_battle: '',
-                showdown_name: ''
+                name: thread.posts![i].name,
+                trip: thread.posts![i].trip,
+                last_active: thread.posts![i].time,
+                avatar: '166'
             };
-            champ.champ_active = curtime - champ.champ_last_active < 15 * 60;
+            champ.active = curtime - champ.last_active < 15 * 60;
 			/*
 			  Dead hours
 			 */
-            champ.deaddrip = curtime - champ.champ_last_active < 120 * 60;
-            champ.champ_battle = matches[0];
-            if (champ.champ_battle[0] != 'h')
-                champ.champ_battle = 'http://' + champ.champ_battle;
+            champ.deaddrip = curtime - champ.last_active < 120 * 60;
+            champ.current_battle = matches[0];
+            if (champ.current_battle[0] != 'h')
+                champ.current_battle = 'https://' + champ.current_battle;
             return champ;
         }
     }
@@ -84,13 +76,13 @@ export let shoestart = async () => {
             champ = await timeOutPromise(getCurrentChamp(thread), 30000);
             console.log(champ, thread);
 
-            if (champ.champ_battle != oldbattle && champ.champ_active) {
-                oldbattle = champ.champ_battle;
-                let bm = new BattleMonitor(champ, !!champ.champ_name);
+            if (champ.current_battle != oldbattle && champ.active) {
+                oldbattle = champ.current_battle;
+                let bm = new BattleMonitor(champ, !!champ.name);
                 bm.monitor();
             }
-            if (champ.champ_active) {
-                let dbchamp = await mongo.ChampsCollection.findOne({ trip: champ.champ_trip });
+            if (champ.active) {
+                let dbchamp = await mongo.ChampsCollection.findOne({ trip: champ.trip });
                 champ.avatar = '166';
                 if (dbchamp) {
                     champ.avatar = dbchamp.avatar!;

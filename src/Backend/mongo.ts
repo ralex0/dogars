@@ -54,7 +54,7 @@ export const registerChampResult = async (battleData: BattleData, hasWon: boolea
         let ouelo = ~~oustat.elo;
         // no need to sync
         ChampsCollection.updateOne({
-            trip: battleData.champ.champ_trip
+            trip: battleData.champ.trip
         }, {
                 $set: {
                     elo: b,
@@ -65,33 +65,33 @@ export const registerChampResult = async (battleData: BattleData, hasWon: boolea
         console.log(e);
     }
     if (hasWon) {
-        await pokeUtils.saveReplay(battleData.champ.champ_battle);
+        await pokeUtils.saveReplay(battleData.champ.current_battle);
         replayurl = 'http://replay.pokemonshowdown.com/' + battleData.roomid;
     }
     let inc = hasWon ? 'wins' : 'loses';
-    let champ = ChampsCollection.findOne({ trip: battleData.champ.champ_trip });
+    let champ = ChampsCollection.findOne({ trip: battleData.champ.trip });
     if (!champ) {
-        ChampsCollection.insertOne(new Champ(battleData.champ.champ_name, battleData.champ.champ_trip));
+        ChampsCollection.insertOne(new Champ(battleData.champ.name, battleData.champ.trip));
     }
 
     if (battleData.champ.avatar)
         await ChampsCollection.updateOne({
-            trip: battleData.champ.champ_trip
+            trip: battleData.champ.trip
         }, {
                 $set: { avatar: battleData.champ.avatar }
             });
     await ChampsCollection.updateOne({
-        trip: battleData.champ.champ_trip
+        trip: battleData.champ.trip
     }, {
             $inc: { [inc]: 1 },
-            $set: { name: battleData.champ.champ_name }
+            $set: { name: battleData.champ.name }
         });
     if (!hasWon)
         return;
     let savedrepl = await ReplaysCollection.insertOne(new Replay(replayurl,
-        'Automatically uploaded replay. Champ: ' + battleData.champ.champ_name + ' ' + battleData.champ.champ_trip,
-        battleData.champ.champ_name,
-        battleData.champ.champ_trip,
+        'Automatically uploaded replay. Champ: ' + battleData.champ.name + ' ' + battleData.champ.trip,
+        battleData.champ.name,
+        battleData.champ.trip,
         0));
     let n = 0;
     for (let i = 0; i < battleData.memes.length; ++i) {
