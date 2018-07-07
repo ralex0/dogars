@@ -9,6 +9,10 @@ export let router = express();
 let apiai = require('apiai');
 
 import { api } from './api';
+import cors = require('cors');
+
+api.use(cors());
+router.use(cors());
 
 router.set('env', 'production');
 router.use(bodyParser.json());
