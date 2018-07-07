@@ -1,6 +1,5 @@
 import { MongoClient, Db, Collection } from 'mongodb';
 import { settings } from './settings';
-import { logger } from './logger';
 import * as request from 'request-promise-native';
 import * as tripcode from 'tripcode';
 
@@ -57,24 +56,19 @@ export const registerChampResult = async (battleData: BattleData, hasWon: boolea
             trip: battleData.champ.trip
         }, {
                 $set: {
-                    elo: b,
+                    elo: ouelo,
                     showdown_name: battleData.champ.showdown_name
                 }
             });
     } catch (e) {
         console.log(e);
     }
-    if (hasWon) {
-        await pokeUtils.saveReplay(battleData.champ.current_battle);
-        replayurl = 'http://replay.pokemonshowdown.com/' + battleData.roomid;
-    }
     let inc = hasWon ? 'wins' : 'loses';
     let champ = ChampsCollection.findOne({ trip: battleData.champ.trip });
     if (!champ) {
         ChampsCollection.insertOne(new Champ(battleData.champ.name, battleData.champ.trip));
     }
-
-    if (battleData.champ.avatar)
+    if (battleData.champ.avatar != '166')
         await ChampsCollection.updateOne({
             trip: battleData.champ.trip
         }, {
@@ -84,10 +78,15 @@ export const registerChampResult = async (battleData: BattleData, hasWon: boolea
         trip: battleData.champ.trip
     }, {
             $inc: { [inc]: 1 },
-            $set: { name: battleData.champ.name }
+            $set: {
+                name: battleData.champ.name,
+                last_seen: +new Date
+            }
         });
     if (!hasWon)
         return;
+    await pokeUtils.saveReplay(battleData.champ.current_battle);
+    replayurl = 'http://replay.pokemonshowdown.com/' + battleData.roomid;
     let savedrepl = await ReplaysCollection.insertOne(new Replay(replayurl,
         'Automatically uploaded replay. Champ: ' + battleData.champ.name + ' ' + battleData.champ.trip,
         battleData.champ.name,

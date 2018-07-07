@@ -1,12 +1,11 @@
 import fs = require('fs');
-let fsp = fs.promises;
 
 import * as express from 'express';
 import bodyParser = require('body-parser');
 import multer = require('multer');
 import cors = require('cors');
 import compression = require('compression');
-import { Collection } from 'mongodb';
+import { Collection, AggregationCursor, Cursor } from 'mongodb';
 import cp = require('child_process');
 import tripcode = require('tripcode');
 
@@ -27,7 +26,7 @@ api.use(bodyParser.json());
 api.use(bodyParser.urlencoded({ extended: true }));
 api.use(compression());
 
-async function paginate<T>(coll: Collection<T>, pspp: number, ppage: number, query: any = {}, sort: any = { id: -1 }): Promise<[number, T[]]> {
+async function paginate<T>(coll: Cursor<T>, pspp: number, ppage: number): Promise<[number, T[]]> {
     if (ppage <= 0)
         ppage = 1;
     if (pspp <= 0)
@@ -35,17 +34,17 @@ async function paginate<T>(coll: Collection<T>, pspp: number, ppage: number, que
     let spp = pspp || 15;
     spp > 100 && (spp = 100);
     let page = ppage || 1;
-    let total = await coll.count(query);
+    let total = await coll.count();
     if (total == 0)
         return [0, []];
     let npages = (~~(total / spp)) + (+(total % spp != 0));
     page >= npages && (page = npages);
     let nskip = spp * (page - 1);
-    return [total, await coll.find(query).sort(sort).skip(nskip).limit(spp).toArray()];
+    return [total, await coll.skip(nskip).limit(spp).toArray()];
 }
 
 api.get('/sets', async (request, response) => {
-    let res = await paginate(db.SetsCollection, +request.query.spp, +request.query.page);
+    let res = await paginate(db.SetsCollection.find(), +request.query.spp, +request.query.page);
     response.json(res);
 });
 
@@ -54,7 +53,7 @@ api.get('/champ', async (req, res) => {
 });
 
 api.get('/fame', async (request, response) => {
-    let res = await paginate(db.SetsCollection, +request.query.spp, +request.query.page, { has_custom: 1 }, { id: 1 });
+    let res = await paginate(db.SetsCollection.find({ has_custom: 1 }).sort({ id: 1 }), +request.query.spp, +request.query.paged);
     response.json(res);
 });
 
@@ -100,28 +99,33 @@ api.delete('/sets/:id', async (request, response) => {
 
 api.get('/champs', async (req, res) => {
     let sort = 'wins';
-    let allowed = ['wins', 'loses', 'elo'];
+    let allowed = ['wins', 'loses', 'elo', 'last_seen'];
     if (allowed.includes(req.query.sort))
         sort = req.query.sort;
-    let r = await paginate(db.ChampsCollection, +req.query.spp, +req.query.page, {}, {[sort]: 1});
+    let reversed = req.query.r == 'true';
+    let a = db.ChampsCollection.find().project({
+        total: {
+            $add: ['$wins', '$loses']
+        },
+        winrate: { $divide: ['$wins', { $sum: ['$wins', '$loses'] }] },
+        wins: 1,
+        loses: 1,
+    }).sort({ [sort]: reversed ? 1 : -1 });
+    let r = await paginate(a, +req.query.spp, +req.query.page);
     res.json(r);
 });
 
 api.get('/replays', async (req, res) => {
-    let r = await paginate(db.ReplaysCollection,
+    let r = await paginate(db.ReplaysCollection.find({ manual: 1 }),
         +req.query.spp,
-        +req.query.page, {
-            manual: 1
-        });
+        +req.query.page);
     res.json(r);
 });
 
 api.get('/replays/auto', async (req, res) => {
-    let r = await paginate(db.ReplaysCollection,
+    let r = await paginate(db.ReplaysCollection.find({ manual: 0 }),
         +req.query.spp,
-        +req.query.page, {
-            manual: 0
-        });
+        +req.query.page);
     res.json(r);
 });
 
@@ -185,11 +189,11 @@ api.get("/search", async (request, response) => {
             .forEach(attr => { delete request.query[attr] });
         if (request.query.q) {
             let matching = ['name', 'item', 'species', ...[1, 2, 3, 4].map(e => `move_${e}`)];
-            let results = await paginate(db.SetsCollection, spp, page, {
+            let results = await paginate(db.SetsCollection.find({
                 $or: matching.map(k => {
                     return { [k]: new RegExp(request.query.q, 'i') };
                 })
-            }, { id: 1 });
+            }).sort({ id: 1 }), spp, page);
             response.json(results);
         } else { // Advanced search
             let data = ['date_added', 'format', 'creator', 'hash', 'name', 'species',
@@ -200,13 +204,13 @@ api.get("/search", async (request, response) => {
             Object.keys(request.query)
                 .filter(v => !data.includes(v))
                 .forEach(attr => { delete request.query[attr] });
-            let results = await paginate(db.SetsCollection, spp, page, {
+            let results = await paginate(db.SetsCollection.find({
                 $and: decompose(request.query).map(k => {
                     let prop = Object.keys(k)[0];
                     k[prop] = new RegExp(k[prop], 'i');
                     return k;
                 })
-            }, { id: 1 });
+            }).sort({ id: 1 }), spp, page);
             response.json(results);
         }
     } catch (e) {

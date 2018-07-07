@@ -71,10 +71,8 @@ function timeOutPromise<T>(prom: Promise<T>, timeout: number): Promise<T> {
 export let shoestart = async () => {
     while (true) {
         try {
-            //todo: timeout
             let thread = await timeOutPromise(getCurrentThread(), 30000);
             champ = await timeOutPromise(getCurrentChamp(thread), 30000);
-            console.log(champ, thread);
 
             if (champ.current_battle != oldbattle && champ.active) {
                 oldbattle = champ.current_battle;
@@ -90,10 +88,7 @@ export let shoestart = async () => {
             }
         }
         catch (e) {
-            console.log('--------------------------------------------------------------------------------');
-            console.log('An error occured while retrieving some data.\nSome features might now work properly\n Attempting again in a minute');
             console.log(e);
-            console.log('--------------------------------------------------------------------------------');
         }
         await snooze(1000 * 60);
     }
