@@ -141,8 +141,13 @@ api.post('/replays', async (req, res) => {
     }
 });
 
+let commitstr = cp.spawnSync('git', ['log', `--pretty=format:{%n  "commit": "%h",%n  "date": "%ad",%n  "subject": "%s",%n  "message": "%b"%n},`]).stdout.toString().trim()
+commitstr = commitstr.substr(0, commitstr.length - 1);
+commitstr = '[' + commitstr + ']';
+let commits : any[] = JSON.parse(commitstr);
+
 api.get('/changelog', (req, res) => {
-    res.json([]);
+    res.json(commits.slice(0, 20));
 });
 
 api.post('/contact', (req, res) => {
