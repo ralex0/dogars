@@ -141,10 +141,17 @@ api.post('/replays', async (req, res) => {
     }
 });
 
-let commitstr = cp.spawnSync('git', ['log', `--pretty=format:{%n  "commit": "%h",%n  "date": "%ad",%n  "subject": "%s",%n  "message": "%b"%n},`]).stdout.toString().trim()
-commitstr = commitstr.substr(0, commitstr.length - 1);
-commitstr = '[' + commitstr + ']';
-let commits : any[] = JSON.parse(commitstr);
+let commitstr = cp.spawnSync('git', ['log', `--pretty=format:%h%x00%ad%x00%s%x00%b`]).stdout.toString();
+let grouped = commitstr.split('\n').map(s => s.split('\x00'));
+
+let commits = grouped.map(g => {
+  return {
+    hash: g[0],
+    date: g[1],
+    subject: g[2],
+    message: g[3]
+  };
+});
 
 api.get('/changelog', (req, res) => {
     res.json(commits.slice(0, 20));
