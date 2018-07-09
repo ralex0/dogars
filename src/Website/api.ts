@@ -152,10 +152,10 @@ let commits = grouped.map(g => {
   return {
     hash: g[0],
     date: g[1],
-    subject: g[2],
-    message: g[3]
+    subject: g[2] || '',
+    message: g[3] || ''
   };
-}).filter(m => !m.message.toLowerCase().includes('merge'));
+}).filter(m => !m.subject.toLowerCase().includes('merge'));
 
 api.get('/changelog', (req, res) => {
     res.json(commits.slice(0, 20));
