@@ -13,7 +13,7 @@ import * as db from '../Backend/mongo';
 import { Sets } from '../Backend/Models/Sets';
 import { Replay } from '../Backend/Models/Replay';
 import { decompose, banners, getSetOfTheDay } from './utils';
-import { champ } from '../Shoedrip/shoedrip';
+import { champ, cthread } from '../Shoedrip/shoedrip';
 
 let upload = multer({ dest: '/tmp' });
 
@@ -49,6 +49,10 @@ api.get('/sets', async (request, response) => {
 
 api.get('/champ', async (req, res) => {
     res.json(champ);
+});
+
+api.get('/thread', async (req, res) => {
+    res.json(cthread);
 });
 
 api.get('/fame', async (request, response) => {
@@ -141,8 +145,8 @@ api.post('/replays', async (req, res) => {
     }
 });
 
-let commitstr = cp.spawnSync('git', ['log', `--pretty=format:%h%x00%ad%x00%s%x00%b`]).stdout.toString();
-let grouped = commitstr.split('\n').map(s => s.split('\x00'));
+let commitstr = cp.spawnSync('git', ['log', `--pretty=format:%h%x00%ad%x00%s%x00%b%x00`]).stdout.toString();
+let grouped = commitstr.split('\x00\n').map(s => s.split('\x00'));
 
 let commits = grouped.map(g => {
   return {
@@ -151,7 +155,7 @@ let commits = grouped.map(g => {
     subject: g[2],
     message: g[3]
   };
-});
+}).filter(m => !m.message.toLowerCase().includes('merge'));
 
 api.get('/changelog', (req, res) => {
     res.json(commits.slice(0, 20));
@@ -166,6 +170,7 @@ api.post('/contact', (req, res) => {
         let child = cp.spawnSync('sendmail', [settings.admin_mail], {
             input: inputData
         });
+        res.json({});
     } catch (e) {
         res.status(400).json(e);
     }

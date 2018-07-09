@@ -27,7 +27,7 @@ let inited = false;
 export let init = async () => {
     if (inited)
         return;
-    connection = await MongoClient.connect(url);
+    connection = await MongoClient.connect(url, { useNewUrlParser: true });
     memes = connection.db(dbName);
     let collections = await memes.collections();
     if (collections.length == 0)
@@ -36,7 +36,7 @@ export let init = async () => {
     ChampsCollection = memes.collection('Champs');
     SetsCollection = memes.collection('Sets');
     ReplaysCollection = memes.collection('Replays');
-    total = await SetsCollection.count({});
+    total = await SetsCollection.countDocuments({});
 }
 
 

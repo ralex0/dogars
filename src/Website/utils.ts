@@ -5,7 +5,7 @@ import { getRandomSet } from '../Backend/mongo';
 
 export let banners = fs.readdirSync(settings.ressources + '/public/ban');
 
-let ranset: Promise<Sets[]>;
+let ranset: Sets | null = null;
 
 export let match = (base: any, pattern: any): boolean => Object.keys(pattern).every(p => (base[p] !== undefined) && (base[p] === pattern[p]));
 
@@ -24,16 +24,15 @@ export const extend = (d: any, s: any) => {
     return d;
 }
 
-let prepareRandSet = () => {
-    let a = new Date();
-    let seed = (((a.getMonth() + 1) * (a.getDay() + 1) * (a.getFullYear()) + 1));
-    ranset = getRandomSet(seed);
-};
-setInterval(prepareRandSet, 1000 * 3600 * 24);
+setInterval(() => {ranset = null}, 1000 * 3600 * 24);
 
 export const getSetOfTheDay = async () => {
-    prepareRandSet();
-    return (await ranset)[0];
+    if (ranset)
+        return ranset as Sets;
+    let a = new Date();
+    let seed = (((a.getMonth() + 1) * (a.getDay() + 1) * (a.getFullYear()) + 1));
+    ranset = (await getRandomSet(seed))[0];
+    return ranset;
 }
 
 export let levenshtein = (a: string, b: string) => {

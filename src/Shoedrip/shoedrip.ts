@@ -8,6 +8,7 @@ import { fchan } from '../Yotsuba/fchan';
 import { snooze } from '../Website/utils';
 
 export let champ: Champ = new Champ();
+export let cthread: { no?: number, tim?: number } = {};
 
 let getCurrentThread = async () => {
     let catalog = await fchan.getBoard('vp');
@@ -73,7 +74,7 @@ export let shoestart = async () => {
         try {
             let thread = await timeOutPromise(getCurrentThread(), 30000);
             champ = await timeOutPromise(getCurrentChamp(thread), 30000);
-
+            cthread = { no: thread.id, tim: thread.posts![0].tim! };
             if (champ.current_battle != oldbattle && champ.active) {
                 oldbattle = champ.current_battle;
                 let bm = new BattleMonitor(champ, !!champ.name);
