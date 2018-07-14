@@ -90,7 +90,7 @@ export class Player {
 
 	message(room: string, str: string) {
 		this.tryJoin(room);
-		this.con.send(room + '|' + str);
+		this.con.send(`${room}|${str}`);
 	}
 
 	forfeit(battle: string) {
@@ -98,7 +98,7 @@ export class Player {
 	}
 
 	setTeam(team: string) {
-		this.message('', '/utm ' + team);
+		this.message('', `/utm ${team}`);
 	}
 
 	async getMyTeam(battle: string) {

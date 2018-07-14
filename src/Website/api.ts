@@ -2,20 +2,19 @@ import fs = require('fs');
 
 import * as express from 'express';
 import bodyParser = require('body-parser');
-import multer = require('multer');
+//import multer = require('multer');
 import compression = require('compression');
-import { Collection, AggregationCursor, Cursor } from 'mongodb';
+import { Collection } from 'mongodb';
 import cp = require('child_process');
 import tripcode = require('tripcode');
 
 import { settings } from '../Backend/settings';
 import * as db from '../Backend/mongo';
-import { Sets } from '../Backend/Models/Sets';
 import { Replay } from '../Backend/Models/Replay';
 import { decompose, banners, getSetOfTheDay } from './utils';
 import { champ, cthread } from '../Shoedrip/shoedrip';
 
-let upload = multer({ dest: '/tmp' });
+//let upload = multer({ dest: '/tmp' });
 
 export let api = express();
 api.set('env', 'production');
@@ -39,7 +38,7 @@ async function paginate<T>(coll: Collection<any>, prop: Object[], pspp: number, 
         }
     }]);
     let res = await resc.next();
-    return [res.metadata[0].total, res.data];
+    return [res.metadata.length ? res.metadata[0].total : 0, res.data];
 }
 
 api.get('/sets', async (request, response) => {
@@ -47,11 +46,11 @@ api.get('/sets', async (request, response) => {
     response.json(res);
 });
 
-api.get('/champ', async (req, res) => {
+api.get('/champ', async (_, res) => {
     res.json(champ);
 });
 
-api.get('/thread', async (req, res) => {
+api.get('/thread', async (_, res) => {
     res.json(cthread);
 });
 
@@ -149,12 +148,12 @@ let commitstr = cp.spawnSync('git', ['log', `--pretty=format:%h%x00%ad%x00%s%x00
 let grouped = commitstr.split('\x00\n').map(s => s.split('\x00'));
 
 let commits = grouped.map(g => {
-  return {
-    hash: g[0],
-    date: g[1],
-    subject: g[2],
-    message: g[3]
-  };
+    return {
+        hash: g[0],
+        date: g[1],
+        subject: g[2],
+        message: g[3]
+    };
 }).filter(m => !m.message.toLowerCase().includes('merge'));
 
 api.get('/changelog', (req, res) => {
@@ -180,17 +179,17 @@ api.post("/trip", (request, response) => {
     response.json(tripcode(request.body.v));
 });
 
-api.get("/day", async (request, response) => {
+api.get("/day", async (_, response) => {
     let ranset = await getSetOfTheDay();
     response.json(ranset);
 });
 
-api.get("/random", async (request, response) => {
+api.get("/random", async (_, response) => {
     let ranset = await db.getRandomSet();
     response.json(ranset[0].id);
 });
 
-api.get("/ban", (req, res) => {
+api.get("/ban", (_, res) => {
     let len = banners.length;
     res.json(banners[~~(Math.random() * len)]);
 })
@@ -218,9 +217,7 @@ api.get("/search", async (request, response) => {
         } else { // Advanced search
             let data = ['date_added', 'format', 'creator', 'hash', 'name', 'species',
                 'gender', 'item', 'ability', 'shiny', 'level', 'happiness', 'nature',
-                'move_1', 'move_2', 'move_3', 'move_4', 'hp_ev', 'atk_ev', 'def_ev',
-                'spa_ev', 'spd_ev', 'spe_ev', 'hp_iv', 'atk_iv', 'def_iv', 'spa_iv',
-                'spd_iv', 'spe_iv', 'description'];
+                'move_1', 'move_2', 'move_3', 'move_4', 'description'];
             Object.keys(request.query)
                 .filter(v => !data.includes(v))
                 .forEach(attr => { delete request.query[attr] });
@@ -252,6 +249,6 @@ api.get('/custom/:id', async (req, res) => {
     res.status(404).end();
 });
 
-api.use(function (request, response) {
-    response.status(404);
+api.use(function (_, response) {
+    response.status(404).end();
 });

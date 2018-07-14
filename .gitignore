@@ -6,3 +6,4 @@ dist/*
 built/*
 .vscode/*
 dogars.code-workspace
+public/*

@@ -26,8 +26,8 @@ export class CringCompilation {
 
         await this.page.goto(this.battleLink);
         let lll: any = {
-            "dark": true,
-            "bwgfx": true,
+            "dark": false,
+            "bwgfx": false,
             "noanim": false,
             "nopastgens": true
         };
@@ -42,10 +42,10 @@ export class CringCompilation {
         let buff = await this.page!.screenshot({
             type: 'png'
         });
-        let cringefolder = settings.ressources + '/public/cringec';
+        let cringefolder = `${settings.ressources}/public/cringec`;
         if (!fs.existsSync(cringefolder))
             fs.mkdirSync(cringefolder);
-        let tmp = cringefolder + '/tmp.png';
+        let tmp = `${cringefolder}/tmp.png`;
         fs.writeFileSync(tmp, buff);
         let len = fs.readdirSync(cringefolder).length;
         let newfile = `${cringefolder}/${len}.png`

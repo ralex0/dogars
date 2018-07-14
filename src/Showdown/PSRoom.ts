@@ -35,6 +35,6 @@ export class PSRoom {
     }
 
     send(data: string) {
-		this.con.send(this.room + '|' + data);
+		this.con.send(`${this.room}|${data}`);
     }
 }

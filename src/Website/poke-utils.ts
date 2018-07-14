@@ -1,6 +1,5 @@
 import request = require('request-promise-native');
 
-import pokedexd = require('./pokedex.js');
 import { toId, clamp } from './utils';
 
 import { connection } from '../Showdown/PSConnection';
@@ -8,8 +7,6 @@ import { PSCheckTeamRequest, PSSaveBattleRequest } from '../Showdown/PSMessage';
 
 import { Sets } from '../Backend/Models/Sets';
 import { buildCheckableSet } from '../Backend/mongo';
-
-let pokedex = pokedexd.BattlePokedex;
 
 // Shamelessly stolen and adapted from showdown-client
 let BattleStatIDs: { [idx: string]: string } = {
@@ -32,44 +29,8 @@ let BattleStatIDs: { [idx: string]: string } = {
     spe: 'spe'
 };
 
-let getTemplate = (name: string) => {
-    name = toId(name);
-    if (pokedex[name])
-        return pokedex[name];
-    for (let i in pokedex) {
-        // What's the difference between a Form and Forme, Zarel?
-        // Why do some Forms have a dex entry while others don't and
-        // some Formes have an entry and others don't??? kys
-        let formeIdx = pokedex[i].otherFormes ? pokedex[i].otherFormes.indexOf(name) : -1;
-        let formIdx = pokedex[i].otherForms ? pokedex[i].otherForms.indexOf(name) : -1;
-        if (formeIdx != -1) {
-            return pokedex[pokedex[i].otherFormes[formeIdx]] || pokedex[i];
-        }
-        if (formIdx != -1) {
-            return pokedex[pokedex[i].otherForms[formIdx]] || pokedex[i];
-        }
-    }
-};
-
-let getSpecies = (template: any, spec: string) => {
-    try {
-        if (template.otherForms) {
-            let formIdx = template.otherForms.indexOf(spec);
-            if (formIdx != -1) {
-                let name = template.otherForms[formIdx].slice(template.species.length);
-                return toId(template.species) + '-' + name;
-            }
-        }
-        if (template.baseSpecies)
-            return toId(template.baseSpecies) + '-' + toId(template.forme);
-        return toId(template.species);
-    }
-    catch (e) {
-        console.log(e);
-    }
-}
-
 export module pokeUtils {
+    // I'm never touching this.
     export let parseSet = (text: string) => {
         let stext = text.split("\n");
         var team = [];
@@ -183,26 +144,25 @@ export module pokeUtils {
     let replayq = 'a["|queryresponse|savereplay|';
 
     let pack = (set: Sets): string => {
-        let packed = (set.name || '') + '|';
+        let packed = `${set.name || ''}|`;
         let attrs1 = ['species', 'item', 'ability'];
-        packed += attrs1.map(attr => toId(set[attr]) + '|').join('');
+        packed += attrs1.map(attr => `${toId(set[attr])}|`).join('');
         packed += [1, 2, 3, 4]
-            .map(d => 'move_' + d)
+            .map(d => `move_${d}`)
             .map(m => toId(set[m]))
             .join(',') + '|';
-        packed += (set.nature || '') + '|';
-        packed += ['hp', 'atk', 'def', 'spa', 'spd', 'spe']
-            .map(s => s + '_ev')
-            .map(s => set[s] == 0 ? '' : set[s])
-            .join(',') + '|';
-        packed += (set.gender || '') + '|';
-        packed += ['hp', 'atk', 'def', 'spa', 'spd', 'spe']
-            .map(s => s + '_iv')
-            .map(s => set[s] == 31 ? '' : set[s])
-            .join(',') + '|';
+        packed += `${set.nature || ''}|`;
+        let appstats = (n: string, def: number) =>
+            ['hp', 'atk', 'def', 'spa', 'spd', 'spe']
+                .map(s => `${s}_${n}`)
+                .map(s => set[s] == def ? '' : set[s])
+                .join(',');
+        packed += `${appstats('ev', 0)}|`;
+        packed += `${set.gender || ''}|`;
+        packed += `${appstats('iv', 31)}|`;
         if (set.shiny)
             packed += 'S';
-        packed += '|' + ((set.level && set.level != 100) ? set.level : '') + '|';
+        packed += `|${(set.level && set.level != 100) ? set.level : ''}|`;
         packed += ((set.happiness && set.happiness < 255) ? set.happiness : '');
         return packed;
     }

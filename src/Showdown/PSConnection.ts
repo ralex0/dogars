@@ -106,7 +106,7 @@ export class PSConnection {
 		let ret: PSRoom = new PSRoom(this, room);
 		if (!this.ws)
 			throw 'Attempted to send without initialized socket';
-		this.send('|/join ' + room);
+		this.send(`|/join ${room}`);
 		this.rooms.set(room, ret);
 		return ret;
 	}

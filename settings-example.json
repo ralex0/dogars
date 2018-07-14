@@ -1,11 +1,19 @@
 {
 	"db": {
 		"host": "127.0.0.1",
-		"user": "some_user",
-		"database": "some_database",
-		"password": "some_pass",
+		"user": "user",
+		"database": "dbname",
+		"password": "password",
 		"charset": "utf8mb4"
 	},
-	"admin_pass": "[my waifu] is [article] [noun] [preposition] [article] universe",
-	"secret": "[secret github key]"
+	"showdown": {
+		"user": "someone",
+		"pass": "somepass"
+	},
+	"admin_pass": "*used to modify sets*",
+	"admin_mail": "*used for the contact page*",
+	"secret": "*used for the github hook*",
+	"botkey": "a98a9707f0844e9ca2c87ab2127620d2",
+	"ressources": "path to this directory",
+	"frontend": "path to the frontend to serve"
 }

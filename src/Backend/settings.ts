@@ -4,7 +4,7 @@ import { ConnectionOptions } from 'typeorm';
 
 let curdir = __dirname;
 let file = '/settings.json';
-while (!fs.existsSync(curdir + file)) {
+while (!fs.existsSync(path.join(curdir, file))) {
     curdir = path.dirname(curdir);
     if (curdir == '/')
         throw "settings.json not found";
@@ -28,5 +28,6 @@ export let settings: {
     admin_pass: string,
     secret: string,
     ressources: string,
+    frontend: string,
     admin_mail: string
-} = JSON.parse(fs.readFileSync(curdir + file).toString());
+} = JSON.parse(fs.readFileSync(path.join(curdir, file)).toString());

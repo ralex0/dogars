@@ -11,8 +11,8 @@ export let match = (base: any, pattern: any): boolean => Object.keys(pattern).ev
 
 export const fileCache: { [idx: string]: string } = {};
 
-fs.watch(settings.ressources + '/public/ban', { persistent: false }, (e, n) => {
-    fs.readdir(settings.ressources + '/public/ban', (e, banfiles) => {
+fs.watch(`${settings.ressources}/public/ban`, { persistent: false }, (e, n) => {
+    fs.readdir(`${settings.ressources}/public/ban`, (e, banfiles) => {
         banners = banfiles;
     });
 })

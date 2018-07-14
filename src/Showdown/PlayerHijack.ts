@@ -68,7 +68,7 @@ export class PlayerHijack {
 			let myteam = await this.account.getMyTeam(this.room)!;
 			for (let mon of myteam!) {
 				let desc = [mon.details, mon.condition, mon.item, mon.baseAbility,
-							Object.keys(mon.stats).map(k => k + ': ' + mon.stats[k]).join(' / '),
+							Object.keys(mon.stats).map(k => `${k}: ${mon.stats[k]}`).join(' / '),
 							mon.moves.join(', ')].join(' ');
 				this.account.message(this.room, desc);
 				await snooze(1500);

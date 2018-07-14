@@ -8,7 +8,7 @@ class CringeProvider {
     cringeserver: sockjs.Server;
     ncringes: number;
     constructor() {
-        this.ncringes = fs.readdirSync(settings.ressources + '/public/cringec').length;
+        this.ncringes = fs.readdirSync(`${settings.ressources}/public/cringec`).length;
         this.cringeserver = sockjs.createServer({ sockjs_url: "https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.1.5/sockjs.min.js" });
         this.cringeserver.on('connection', (conn: sockjs.Connection) => {
             this.clients.push(conn);

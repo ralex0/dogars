@@ -15,13 +15,10 @@ import { settings } from './Backend/settings';
 import { logger } from './Backend/logger';
 import { Cringer } from './Backend/CringeProvider';
 
-
 setInterval(async () => {
-    let backup = settings.ressources + '/public/backup.tar.gz';
-    if (fs.existsSync(backup))
-        fs.renameSync(backup, settings.ressources + '/public/backup' + (+ new Date()) + '.gz');
-    await cp.spawnSync('mongodump', ['--db', settings.db.database, '--gzip', '-o', settings.ressources]);
-    await cp.spawnSync('tar', ['-czf', backup, settings.ressources + '/dump']);
+    let backup = `${settings.ressources}/public/backup.tar.gz`;
+    await cp.spawnSync('mongodump', ['--db', settings.db.database, '--gzip', '-o', `${settings.ressources}/public`]);
+    await cp.spawnSync('tar', ['-czf', backup, `${settings.ressources}/${settings.db.database}`]);
 }, 3600 * 1000);
 
 console.log('Starting web server...');
@@ -34,5 +31,5 @@ server.listen(+process.argv[2] || 1234, '0.0.0.0', async () => {
     console.log('Database connection started, initializing showdown connection...');
     await connection.connect();
     console.log('Showdown connection started, initializing showderp watch service...');
-    shoestart();
+    //shoestart();
 });

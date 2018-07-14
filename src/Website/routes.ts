@@ -6,7 +6,6 @@ import compression = require('compression');
 import { settings } from '../Backend/settings';
 
 export let router = express();
-let apiai = require('apiai');
 
 import { api } from './api';
 import cors = require('cors');
@@ -22,9 +21,10 @@ router.use(compression());
 
 router.disable('x-powered-by');
 
-router.use(express.static(settings.ressources + '/public', { lastModified: true }));
+router.use(express.static(`${settings.ressources}/public`, { lastModified: true }));
+router.use(express.static(`${settings.frontend}/dist`, { lastModified: true }));
 router.use('/api', api);
 
-router.get('*', (req, res, next) => {
-	res.sendFile(settings.ressources + '/public/index.html');
+router.get('*', (_, res, __) => {
+	res.sendFile(`${settings.ressources}/public/index.html`);
 })

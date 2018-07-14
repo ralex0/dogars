@@ -39,6 +39,8 @@ let getCurrentChamp = async (thread: fchan.Thread) => {
     for (let i = thread.posts!.length - 1; i != 0; --i) {
         if (!thread.posts![i].trip)
             continue;
+        if (!thread.posts![i].com)
+            continue;
         let content = thread.posts![i].com!.replace(/<(?:.|\n)*?>/gm, '');
         let matches;
         if ((matches = content.match(/(https?:\/\/)?play.pokemonshowdown.com\/battle-(.*)-([0-9]*)/g))) {
@@ -56,7 +58,7 @@ let getCurrentChamp = async (thread: fchan.Thread) => {
             champ.deaddrip = curtime - champ.last_active < 120 * 60;
             champ.current_battle = matches[0];
             if (champ.current_battle[0] != 'h')
-                champ.current_battle = 'https://' + champ.current_battle;
+                champ.current_battle = `https://${champ.current_battle}`;
             return champ;
         }
     }
