@@ -148,13 +148,13 @@ let commitstr = cp.spawnSync('git', ['log', `--pretty=format:%h%x00%ad%x00%s%x00
 let grouped = commitstr.split('\x00\n').map(s => s.split('\x00'));
 
 let commits = grouped.map(g => {
-    return {
-        hash: g[0],
-        date: g[1],
-        subject: g[2],
-        message: g[3]
-    };
-}).filter(m => !m.message.toLowerCase().includes('merge'));
+  return {
+    hash: g[0],
+    date: g[1],
+    subject: g[2] || '',
+    message: g[3] || ''
+  };
+}).filter(m => !m.subject.toLowerCase().includes('merge'));
 
 api.get('/changelog', (req, res) => {
     res.json(commits.slice(0, 20));
