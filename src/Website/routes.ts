@@ -26,5 +26,5 @@ router.use(express.static(`${settings.frontend}/dist`, { lastModified: true }));
 router.use('/api', api);
 
 router.get('*', (_, res, __) => {
-	res.sendFile(`${settings.ressources}/public/index.html`);
+	res.sendFile(`${settings.frontend}/dist/index.html`);
 })
