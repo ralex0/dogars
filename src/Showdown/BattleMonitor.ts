@@ -51,14 +51,14 @@ export class BattleMonitor {
 		while (str[l] == d)
 			--l;
 		let n = str.length - l - 1;
-
+		
 		if (n >= 2) {
 			let mess = [
 				'checked',
 				'nice trips',
 				'nice quads!',
 				'holy quints!'
-			][n - 1];
+			][n - 2];
 			if (!mess)
 				mess = 'DIGITS CHECKED';
 			this.con.message(this.room.room, mess);
