@@ -197,7 +197,8 @@ export class BattleMonitor {
 		// when all battlers are known
 		if (this.battlers.size == 2) {
 			let names = (<playerAlias[]>['p1', 'p2']).map(x => [x, this.battlers.get(x)!.showdown_name] as [playerAlias, string]);
-
+			if (!champ.possible_names)
+				return;
 			champ.possible_names = champ.possible_names.filter(n => names[1].includes(n));
 			if (champ.possible_names.length == 1) {
 				let alias = names.find(n => n[1] === champ.possible_names[0])![0];
