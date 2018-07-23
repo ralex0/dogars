@@ -118,7 +118,11 @@ export class Player {
 		let event = await room.read({
 			name: 'request'
 		}) as PSRequestMessage;
-		this.teamCache.set(battle, event.side.pokemon!);
+		try {
+			this.teamCache.set(battle, event.side.pokemon!);
+		} catch (e) {
+			console.log('could not set team:', event);			
+		}
 		return this.teamCache.get(battle);
 	}
 
