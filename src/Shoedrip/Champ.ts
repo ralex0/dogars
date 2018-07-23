@@ -10,5 +10,7 @@ export class Champ {
 	deaddrip: boolean = false;
 	last_active: number = 0;
 	jacked: boolean = false;
+	regged: boolean = false;
+	possible_names: string[] = [];
 	team: MemeStats[] = [];
 }

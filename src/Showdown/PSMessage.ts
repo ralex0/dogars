@@ -139,7 +139,7 @@ export class PSSwitchMessage extends PSBattleMessage {
 }
 
 export class PSPlayerDecl extends PSBattleMessage {
-    alias = '';
+    alias?: 'p1' | 'p2';
     showdown_name = '';
     avatar = '';
 }
@@ -163,7 +163,7 @@ let messageToPSBattleMessage = (d: string): PSBattleMessage => {
         case 'player':
             //player|p2|POO IN SPACE|278
             let pl = new PSPlayerDecl();
-            pl.alias = s[1];
+            pl.alias = s[1] as 'p1' | 'p2';
             pl.showdown_name = s[2];
             pl.avatar = s[3];
             ret = pl;

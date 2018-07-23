@@ -2,16 +2,19 @@ import { PSRoom } from './PSRoom';
 import { PSLeaveMessage, PSWinMessage, PSChatMessage, PSJoinMessage, PSPlayerDecl, PSSwitchMessage, PSFaintMessage, PSMessage, PSBattleMessage } from './PSMessage';
 import { Player } from './Player';
 import { connection, PSConnection } from './PSConnection';
-import { PlayerHijack } from './PlayerHijack';
-import { BattleData } from './BattleData'
+import { PlayerHijack, isRegged } from './PlayerHijack';
+import { BattleData } from './BattleData';
 
 import { registerChampResult } from '../Backend/mongo';
 import { logger } from '../Backend/logger';
 import { CringCompilation } from '../Backend/CringeCompilation';
 
-import { Champ } from '../Shoedrip/Champ'
+import { Champ } from '../Shoedrip/Champ';
+import { champ } from '../Shoedrip/shoedrip';
 
-import { levenshtein, snooze } from '../Website/utils';
+import { levenshtein, snooze, toId } from '../Website/utils';
+
+type playerAlias = 'p1' | 'p2';
 
 export class BattleMonitor {
 	[_: string]: any;
@@ -22,7 +25,7 @@ export class BattleMonitor {
 	battleData: BattleData;
 	champ: Champ;
 	room: PSRoom;
-	battlers: Map<string, Champ> = new Map<string, Champ>();
+	battlers: Map<playerAlias, Champ> = new Map<playerAlias, Champ>();
 	compiler: CringCompilation;
 	cringeReady: boolean = false;
 	hi: string[] = [];
@@ -41,7 +44,25 @@ export class BattleMonitor {
 		this.compiler = new CringCompilation(this.champ.current_battle);
 		this.battleData.roomid = this.champ.current_battle.match(/battle-(.*)\/?/)![0];
 		this.room = this.con.tryJoin(this.champ.current_battle.match(/(battle-.*)\/?/)![0]);
-		//		this.room = this.con.joinRoom();
+
+		let str = this.champ.current_battle;
+		let l = str.length - 1;
+		let d = str[l];
+		while (str[l] == d)
+			--l;
+		let n = str.length - l - 1;
+
+		if (n >= 2) {
+			let mess = [
+				'checked',
+				'nice trips',
+				'nice quads!',
+				'holy quints!'
+			][n - 1];
+			if (!mess)
+				mess = 'DIGITS CHECKED';
+			this.con.message(this.room.room, mess);
+		}
 
 		this.compiler.init().then(async () => {
 			await snooze(5000);
@@ -61,6 +82,9 @@ export class BattleMonitor {
 	}
 
 	async c(mes: PSChatMessage) {
+		if (mes.username.includes('dogars'))
+			return;
+
 		let norm = mes.content.toLowerCase();
 		let mapper = [{
 			test: /hi dogars-?chan/i,
@@ -90,11 +114,32 @@ export class BattleMonitor {
 				await r.fun();
 	}
 
+	async preEvent(ev: PSBattleMessage) {
+
+	}
+
+	async postEvent(ev: PSBattleMessage) {
+		if (!this.attemptedJack && this.battleData.dist == 0) { // champ is sure, and we havent attempted jack yet
+			// forge a message to pretend oppo left
+			if (this.battlers.size != 2) // need to have stored everyones data
+				return;
+			let f = new PSLeaveMessage;
+			let bool = (this.battlers.get('p1')!.showdown_name == this.battleData.champ!.showdown_name);
+			let oppo_alias: ('p1' | 'p2') = bool ? 'p2' : 'p1';
+			let oppo = this.battlers.get(oppo_alias)!;
+			f.username = oppo!.showdown_name!;
+			await this.l(f);
+		}
+	}
+
 	async monitor() {
 		while (!this.stopped) {
 			let event = await this.room.read();
-			if (this[event.name])
+			if (this[event.name]) {
+				await this.preEvent(event);
 				await this[event.name].apply(this, [event]);
+				await this.postEvent(event);
+			}
 		}
 	}
 
@@ -102,28 +147,31 @@ export class BattleMonitor {
 		if (this.battleData.finished)
 			return;
 
-		let oppo_name;
-		let oppo_alias;
-		oppo_alias = (this.battlers.get('p1')!.showdown_name == this.battleData.champ!.showdown_name) ? 'p2' : 'p1';
+		let bool = (this.battlers.get('p1')!.showdown_name == this.battleData.champ!.showdown_name);
+		let oppo_alias: ('p1' | 'p2') = bool ? 'p2' : 'p1';
 		if (this.battlers.get(oppo_alias)!.jacked)
 			return;
-		oppo_name = this.battlers.get(oppo_alias)!.showdown_name!;
+		let oppo = this.battlers.get(oppo_alias)!;
+		let oppo_name = oppo!.showdown_name!;
 		if (left.username.indexOf(oppo_name) == 0 || left.username.indexOf(oppo_name) == 1) {
 			if (this.attemptedJack)
 				return;
 			this.attemptedJack = true;
 			let hj = new PlayerHijack(this.battleData, this.battlers);
-			// todo: check if opponent is regged here
 			// possible source of crash
-			hj.tryJack(false);
+			hj.tryJack(oppo.regged);
 		}
 	}
 
 	async win(winner: PSWinMessage) {
 		this.battleData.memes = this.battlers.get(this.battleData.champ_alias!)!.team!;
-		if (this.reg)
+		if (this.reg) {
+			if (this.battleData.dist == 0 && this.battleData.champ!.showdown_name != winner.username)
+				this.con.message(this.room.room, `You can do it, ${this.champ.showdown_name}! I believe in (You)!`);
 			await registerChampResult(this.battleData, this.battleData.champ!.showdown_name == winner.username);
+		}
 		this.stopped = true;
+		champ.possible_names = (<playerAlias[]>['p1', 'p2']).map(x => this.battlers.get(x)!.showdown_name);
 		this.con.tryLeave(this.room.room);
 		await this.compiler.cleanup();
 	}
@@ -133,15 +181,32 @@ export class BattleMonitor {
 			return;
 		let nc = new Champ();
 		nc.showdown_name = pl.showdown_name;
+		nc.regged = await isRegged(toId(pl.showdown_name));
+		console.log(`${pl.showdown_name} is ${!nc.regged ? 'not' : ''} regged`);
 		nc.avatar = pl.avatar;
 
-		this.battlers.set(pl.alias, nc);
+		this.battlers.set(pl.alias!, nc);
 		let dist = levenshtein(this.battleData.champ!.name || '', pl.showdown_name);
 		if (dist < this.battleData.dist!) {
 			this.battleData.champ!.showdown_name = pl.showdown_name;
 			this.battleData.champ!.avatar = pl.avatar;
 			this.battleData.champ_alias = pl.alias;
 			this.battleData.dist = dist;
+		}
+
+		// when all battlers are known
+		if (this.battlers.size == 2) {
+			let names = (<playerAlias[]>['p1', 'p2']).map(x => [x, this.battlers.get(x)!.showdown_name] as [playerAlias, string]);
+
+			champ.possible_names = champ.possible_names.filter(n => names[1].includes(n));
+			if (champ.possible_names.length == 1) {
+				let alias = names.find(n => n[1] === champ.possible_names[0])![0];
+				let fc = this.battlers.get(alias)!;
+				this.battleData.champ!.showdown_name = fc.showdown_name;
+				this.battleData.champ!.avatar = fc.avatar;
+				this.battleData.champ_alias = alias;
+				this.battleData.dist = 0;
+			}
 		}
 	}
 
@@ -151,7 +216,7 @@ export class BattleMonitor {
 			let forme = sw.status.split(',')[0].split('-')[0].trim();
 			if (forme != name) {
 				this.battleData.dist = 0;
-				this.battleData.champ_alias = sw.nick.split(': ')[0].substr(0, 2);
+				this.battleData.champ_alias = sw.nick.split(': ')[0].substr(0, 2) as ('p1' | 'p2');
 				this.battleData.champ!.showdown_name = this.battlers.get(this.battleData.champ_alias!)!.showdown_name;
 				this.battleData.champ!.avatar = this.battlers.get(this.battleData.champ_alias!)!.avatar;
 			}

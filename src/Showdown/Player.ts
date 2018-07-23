@@ -21,11 +21,15 @@ export class LoginForm {
 	name: string = '';
 	pass?: string = '';
 	userid: string = '';
+	oldpassword?: string;
+	password?: string;
+	cpassword?: string;
 }
 
-export let getchallstr = async (user: string, pass: string | undefined, challenge: string) => {
+export let getchallstr = async (user: string, pass: string | undefined, challenge: string): Promise<[string, string]> => {
 	let regged = pass !== undefined;
 	let data: LoginForm = new LoginForm();
+	let jar = request.jar();
 	data.challstr = challenge;
 	if (regged) {
 		data.act = 'login';
@@ -36,7 +40,8 @@ export let getchallstr = async (user: string, pass: string | undefined, challeng
 		data.userid = user;
 	}
 	let body = await request.post('http://play.pokemonshowdown.com/action.php', {
-		form: data
+		form: data,
+		jar: jar
 	});
 	if (body[0] == ';') {
 		throw 'Issue with challenge';
@@ -49,7 +54,9 @@ export let getchallstr = async (user: string, pass: string | undefined, challeng
 		if (body.assertion[0] == ';') {
 			throw 'Issue with login2';
 		}
-		return body.assertion;
+		let cookies = jar.getCookies('http://pokemonshowdown.com/');
+		cookies = cookies.filter(c => c.key == 'sid');
+		return [cookies[0].value, body.assertion];
 	}
 	else if (body.length > 10)
 		return body;
@@ -60,6 +67,7 @@ export class Player {
 	con: PSConnection;
 	user?: string;
 	pass?: string;
+	sid?: string;
 	teamCache: Map<string, ShowdownMon[]> = new Map<string, ShowdownMon[]>();
 	guest = false;
 
@@ -76,7 +84,8 @@ export class Player {
 		if (this.guest)
 			return;
 		let challstr: string = this.con.challstrraw;
-		let assertion: string = await getchallstr(this.user!, this.pass, challstr);
+		let [sid, assertion] = await getchallstr(this.user!, this.pass, challstr);
+		this.sid = sid;
 		this.con.send(`|/trn ${this.user},0,${assertion}`);
 	}
 
