@@ -3,17 +3,20 @@ import request = require('request-promise-native');
 import { PSConnection } from './PSConnection';
 import { ShowdownMon } from './ShowdownMon';
 import { PSRequestMessage, PSRequest } from './PSMessage';
+import fs = require('fs');
+import { settings } from '../Backend/settings';
+import { toId } from '../Website/utils';
+let sids: { [key: string]: { sid: string, exp: number } } = {};
 
-let headers = {
-	'accept': '*/*',
-	'accept-language': 'en-US,en;q=0.8,fr;q=0.6,ja;q=0.4,de;q=0.2',
-	'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
-	'dnt': '1',
-	'origin': 'https://play.pokemonshowdown.com',
-	'referer': 'https://play.pokemonshowdown.com/crossprotocol.html?v1.2',
-	'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
-	'x-requested-with': 'XMLHttpRequest'
-}
+let sidsfile = settings.ressources + '/sids.json';
+if (fs.existsSync(sidsfile))
+	sids = JSON.parse(fs.readFileSync(sidsfile).toString());
+
+enum LoginError {
+	ChallengeFailed,
+	UnexpectedResponse,
+	MalformedAssertion
+};
 
 export class LoginForm {
 	challstr: string = '';
@@ -26,7 +29,30 @@ export class LoginForm {
 	cpassword?: string;
 }
 
-export let getchallstr = async (user: string, pass: string | undefined, challenge: string): Promise<[string, string]> => {
+export let upkeep = async (sid: string, challstr: string) => {
+	let data: LoginForm = new LoginForm();
+	data.challstr = challstr;
+	data.act = 'upkeep';
+	let body = await request.post('http://play.pokemonshowdown.com/action.php', {
+		form: data,
+		headers: {
+			Cookie: `sid=${sid}`
+		}
+	});
+	if (body[0] == ';') {
+		throw LoginError.ChallengeFailed;
+	}
+	if (body[0] != ']')
+		throw LoginError.UnexpectedResponse;
+	body = body.substr(1);
+	body = JSON.parse(body);
+	if (body.assertion[0] == ';') {
+		throw LoginError.MalformedAssertion;
+	}
+	return body.assertion;
+}
+
+export let getassertion = async (user: string, pass: string | undefined, challenge: string, proxy?: string): Promise<[string, string]> => {
 	let regged = pass !== undefined;
 	let data: LoginForm = new LoginForm();
 	let jar = request.jar();
@@ -41,18 +67,20 @@ export let getchallstr = async (user: string, pass: string | undefined, challeng
 	}
 	let body = await request.post('http://play.pokemonshowdown.com/action.php', {
 		form: data,
-		jar: jar
+		jar: jar,
+		proxy: proxy
 	});
+	console.log('===========================', body);
 	if (body[0] == ';') {
-		throw 'Issue with challenge';
+		throw LoginError.ChallengeFailed;
 	}
 	if (regged) {
 		if (body[0] != ']')
-			throw 'Issue with login1';
+			throw LoginError.UnexpectedResponse;
 		body = body.substr(1);
 		body = JSON.parse(body);
 		if (body.assertion[0] == ';') {
-			throw 'Issue with login2';
+			throw LoginError.MalformedAssertion;
 		}
 		let cookies = jar.getCookies('http://pokemonshowdown.com/');
 		cookies = cookies.filter(c => c.key == 'sid');
@@ -60,7 +88,7 @@ export let getchallstr = async (user: string, pass: string | undefined, challeng
 	}
 	else if (body.length > 10)
 		return body;
-	throw 'Issue with login3';
+	throw LoginError.MalformedAssertion;
 }
 
 export class Player {
@@ -84,8 +112,34 @@ export class Player {
 		if (this.guest)
 			return;
 		let challstr: string = this.con.challstrraw;
-		let [sid, assertion] = await getchallstr(this.user!, this.pass, challstr);
-		this.sid = sid;
+		let sid;
+
+		let now = Date.now();
+		if (sids[toId(this.user)]) {
+			if (sids[toId(this.user)].exp > +now) {
+				sid = sids[toId(this.user)].sid;
+			}
+		}
+
+		let assertion;
+		if (sid) {
+			assertion = await upkeep(sid, challstr);
+		} else {
+			try {
+				throw LoginError.MalformedAssertion;
+				[sid, assertion] = await getassertion(this.user!, this.pass, challstr);
+			} catch (e) {
+				console.log('threw', e);
+				if (e == LoginError.MalformedAssertion)
+					[sid, assertion] = await getassertion(this.user!, this.pass, challstr, settings.proxy);
+				else
+					throw e;
+			}
+			let exp = now + 6 * 30 * 24 * 60 * 60 * 1000; // expires in 6 months
+			sids[toId(this.user)] = { sid, exp };
+			fs.writeFile(sidsfile, JSON.stringify(sids), () => console.log(`saved session for ${this.user}`));
+		}
+		console.log(sid, assertion);
 		this.con.send(`|/trn ${this.user},0,${assertion}`);
 	}
 
@@ -121,7 +175,7 @@ export class Player {
 		try {
 			this.teamCache.set(battle, event.side.pokemon!);
 		} catch (e) {
-			console.log('could not set team:', event);			
+			console.log('could not set team:', event);
 		}
 		return this.teamCache.get(battle);
 	}

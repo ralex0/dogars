@@ -10,6 +10,7 @@ import { logger } from '../Backend/logger';
 
 import { snooze, toId } from '../Website/utils';
 import { commonPasswords } from '../commonPasswords';
+import { settings } from '../Backend/settings';
 
 
 let fakechal = '4|034a2f187c98af6da8790273cb5314157d922e1c932aeb6538f5b4c3acdb88809ffdb03f053014e7795a8725d27de1ebdd782ff612484918d0aa43caeab7c66586c83b95f456ccb996b6a94e9aeaa66f18773d401915da8f3899d2715d1dae309ff49c6ff9306ad4ae109be871efd078b69bf19a1b7cccff14976282996668a6';
@@ -21,7 +22,7 @@ let checkpass = async (user: string, pass: string) => {
 	data.name = user;
 	data.pass = pass;
 	let body = await request.post('http://play.pokemonshowdown.com/action.php', {
-		form: data
+		form: data, proxy: settings.proxy
 	});
 	if (body[0] != ']')
 		return false;
@@ -41,7 +42,7 @@ export let changePassword = async (user: string, sid: string, op: string, np: st
 	let body = await request.post('http://play.pokemonshowdown.com/action.php', {
 		form: data,
 		headers: {
-			Cookie: `cookie: showdown_username=${toId(user)}; sid=${sid}`
+			Cookie: `showdown_username=${toId(user)}; sid=${sid}`
 		}
 	});
 	console.log(body);

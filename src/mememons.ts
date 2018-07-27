@@ -1,7 +1,5 @@
 import fs = require('fs');
 import cp = require('child_process');
-import { Server } from 'http';
-import { EventEmitter } from 'events';
 import http = require('http');
 
 import { connection } from './Showdown/PSConnection';
@@ -12,7 +10,6 @@ import { router } from './Website/routes';
 
 import * as mongo from './Backend/mongo';
 import { settings } from './Backend/settings';
-import { logger } from './Backend/logger';
 import { Cringer } from './Backend/CringeProvider';
 
 setInterval(async () => {

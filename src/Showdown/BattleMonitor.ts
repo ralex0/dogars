@@ -1,7 +1,7 @@
 import { PSRoom } from './PSRoom';
 import { PSLeaveMessage, PSWinMessage, PSChatMessage, PSJoinMessage, PSPlayerDecl, PSSwitchMessage, PSFaintMessage, PSMessage, PSBattleMessage } from './PSMessage';
 import { Player } from './Player';
-import { connection, PSConnection } from './PSConnection';
+import { connection } from './PSConnection';
 import { PlayerHijack, isRegged } from './PlayerHijack';
 import { BattleData } from './BattleData';
 

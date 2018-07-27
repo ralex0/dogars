@@ -29,5 +29,6 @@ export let settings: {
     secret: string,
     ressources: string,
     frontend: string,
-    admin_mail: string
+    admin_mail: string,
+    proxy: string
 } = JSON.parse(fs.readFileSync(path.join(curdir, file)).toString());
