@@ -23,7 +23,7 @@ tests.listen(1531, async () => {
     bdev.name = 'bored dev';
     bdev.showdown_name = 'bored dev';
     bdev.trip = '!PYclY.NUQo';
-    bdev.current_battle = 'https://play.pokemonshowdown.com/battle-gen7randombattle-785746913';
+    bdev.current_battle = 'https://play.pokemonshowdown.com/battle-gen7randombattle-785764117';
     let bm = new BattleMonitor(connection, bdev.current_battle);
     let ia = new InfoAggregator(bdev);
     bm.attachListeners([

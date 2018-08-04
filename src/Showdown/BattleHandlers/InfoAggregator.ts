@@ -23,7 +23,7 @@ export default class InfoAggregator extends BasicHandler {
             return;
         let nc = new Champ();
         nc.showdown_name = pl[2];
-        nc.regged = await isRegged(toId(pl[2]));
+        //nc.regged = await isRegged(toId(pl[2]));
         console.log(`${pl[2]} is ${!nc.regged ? 'not' : ''} regged`);
         nc.avatar = pl[3];
 
@@ -87,10 +87,11 @@ export default class InfoAggregator extends BasicHandler {
     }
     
     async win(winner: BattleEvents['win']) {
-		this.battleData.memes = this.battlers.get(this.battleData.champ_alias!)!.team!;
-		if (this.guessedChamp.name) {
+        let champdata = this.battlers.get(this.battleData.champ_alias!)!
+		this.battleData.memes = champdata.team!;
+		if (champdata.showdown_name) {
 			if (this.battleData.dist == 0 && this.battleData.champ!.showdown_name != winner[1])
-				this.account.message(this.roomname, `You can do it, ${this.guessedChamp.showdown_name}! I believe in (You)!`);
+				this.account.message(this.roomname, `You can do it, ${champdata.showdown_name}! I believe in (You)!`);
 			await registerChampResult(this.battleData, this.battleData.champ!.showdown_name == winner[1]);
 		}
 		this.battleData.finished = true;
