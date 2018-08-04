@@ -2,7 +2,6 @@ import fs = require('fs');
 
 import * as express from 'express';
 import bodyParser = require('body-parser');
-//import multer = require('multer');
 import compression = require('compression');
 import { Collection } from 'mongodb';
 import cp = require('child_process');
@@ -13,8 +12,6 @@ import * as db from '../Backend/mongo';
 import { Replay } from '../Backend/Models/Replay';
 import { decompose, banners, getSetOfTheDay } from './utils';
 import { champ, cthread } from '../Shoedrip/shoedrip';
-
-//let upload = multer({ dest: '/tmp' });
 
 export let api = express();
 api.set('env', 'production');
@@ -144,7 +141,7 @@ api.post('/replays', async (req, res) => {
     }
 });
 
-let commitstr = cp.spawnSync('git', ['log', `--pretty=format:%h%x00%ad%x00%s%x00%b%x00`]).stdout.toString();
+let commitstr = cp.spawnSync('git', ['-C', settings.ressources, 'log', `--pretty=format:%h%x00%ad%x00%s%x00%b%x00`]).stdout.toString();
 let grouped = commitstr.split('\x00\n').map(s => s.split('\x00'));
 
 let commits = grouped.map(g => {

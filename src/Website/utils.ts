@@ -7,8 +7,6 @@ export let banners = fs.readdirSync(settings.ressources + '/public/ban');
 
 let ranset: Sets | null = null;
 
-export let match = (base: any, pattern: any): boolean => Object.keys(pattern).every(p => (base[p] !== undefined) && (base[p] === pattern[p]));
-
 export const fileCache: { [idx: string]: string } = {};
 
 fs.watch(`${settings.ressources}/public/ban`, { persistent: false }, (e, n) => {
@@ -77,7 +75,6 @@ export let toId = (text: any) => {
 }
 
 export let snooze = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-export let suck = (d: string) => JSON.parse(d.substr(1))[0];
 
 export let clamp = (min: number, val: number, max: number) => {
     if (val < min)

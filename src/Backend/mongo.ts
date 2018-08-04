@@ -30,8 +30,6 @@ export let init = async () => {
     connection = await MongoClient.connect(url, { useNewUrlParser: true });
     memes = connection.db(dbName);
     let collections = await memes.collections();
-    if (collections.length == 0)
-        convert();
     inited = true;
     ChampsCollection = memes.collection('Champs');
     SetsCollection = memes.collection('Sets');
@@ -39,27 +37,30 @@ export let init = async () => {
     total = await SetsCollection.countDocuments({});
 }
 
+const updateElo = async (trip: string, name: string) => {
+    let b: string = await request.get(`https://play.pokemonshowdown.com/~~showdown/action.php?act=ladderget&user=${toId(name)}`);
+    let stats: ShowdownStat[] = JSON.parse(b.substr(1));
+    if (stats.length == 0)
+        throw "Unregistered or never played";
+    let oustat = stats.filter(e => e.formatid == 'gen7ou')[0];
+    if (!oustat)
+        throw "Never played OU";
+    let ouelo = ~~oustat.elo;
+    // no need to sync
+    ChampsCollection.updateOne({
+        trip
+    }, {
+            $set: {
+                elo: ouelo,
+                showdown_name: name
+            }
+    });
+}
 
 export const registerChampResult = async (battleData: BattleData, hasWon: boolean): Promise<void> => {
     let replayurl: string = '';
     try {
-        let b: string = await request.get(`https://play.pokemonshowdown.com/~~showdown/action.php?act=ladderget&user=${toId(battleData.champ.showdown_name)}`);
-        let stats: ShowdownStat[] = JSON.parse(b.substr(1));
-        if (stats.length == 0)
-            throw "Unregistered or never played";
-        let oustat = stats.filter(e => e.formatid == 'gen7ou')[0];
-        if (!oustat)
-            throw "Never played OU";
-        let ouelo = ~~oustat.elo;
-        // no need to sync
-        ChampsCollection.updateOne({
-            trip: battleData.champ.trip
-        }, {
-                $set: {
-                    elo: ouelo,
-                    showdown_name: battleData.champ.showdown_name
-                }
-            });
+        updateElo(battleData.champ.trip, battleData.champ.showdown_name);
     } catch (e) {
         console.log(e);
     }
@@ -101,10 +102,6 @@ export const registerChampResult = async (battleData: BattleData, hasWon: boolea
                 { $push: { sets: set } });
         }
     }
-}
-
-let convert = async () => {
-    throw "Conversion not supported anymore";
 }
 
 export const deleteSet = async (id: number, trip: string, ignored?: any) => {

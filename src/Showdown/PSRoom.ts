@@ -1,22 +1,20 @@
 import { PSConnection } from "./PSConnection";
-import { PSBattleMessage } from "./PSMessage";
-
-import { match } from "../Website/utils";
+import { BattleEventsType, BattleEventsName, BattleEvents } from "./PSMessage";
 
 export class PSRoom {
     con: PSConnection;
     room: string;
-    messqueu: PSBattleMessage[] = [];
+    messqueu: BattleEventsType[] = [];
 
-    res?: { filter?: any, res: (ev: PSBattleMessage) => void} ;
+    res?: { filter?: any, res: (ev: BattleEventsType) => void} ;
 
     constructor(conn: PSConnection, room: string) {
         this.con = conn;
         this.room = room;
     }
 
-    recv(ev: PSBattleMessage) {
-        if(this.res && (this.res.filter === undefined || match(ev, this.res.filter))) {
+    recv(ev: BattleEventsType) {
+        if(this.res && (this.res.filter === undefined || ev[0] == this.res.filter)) {
             this.res.res(ev);
             this.res = undefined;
         }
@@ -24,11 +22,12 @@ export class PSRoom {
             this.messqueu.push(ev);
     }
 
-    async read(filter?: any) : Promise<PSBattleMessage> {
-        return new Promise<PSBattleMessage>((res, rej) => {
+    async read<T extends BattleEventsName>(filter?: T) : Promise<BattleEvents[T]> {
+        return new Promise<BattleEvents[T]>((res, rej) => {
             if(this.messqueu.length >= 1) {
-                let idx = this.messqueu.findIndex(m => filter === undefined || match(m, filter));
-                return res(this.messqueu.splice(idx, 1)[0]!);
+                let idx = this.messqueu.findIndex(m => filter === undefined || m[0] == filter);
+                let a: BattleEvents[T] = this.messqueu.splice(idx, 1)[0]!;
+                return res(a);
             }
             this.res = {filter, res};
         });

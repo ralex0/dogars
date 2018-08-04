@@ -1,37 +1,87 @@
-import { PSRoom } from "./PSRoom";
-import { ShowdownMon } from "./ShowdownMon";
+export type PokemonIdent = string;
+export type Ability = string;
+export type Effect = string;
+export type Stat = string;
+export type Username = string;
+export type Move = string;
 
-export type PSJoinMessage = PSLeaveMessage;
+export type GlobalEvents = {
+    updateuser: ['updateuser', Username, string],
+    queryresponse: ['queryresponse', string],
+    popup: ['popup', string],
+    formats: ['formats', string],
+    challstr: ['challstr', string],
+    updatesearch: ['updatesearch', string],
+};
 
-export class UnknownMessage {
+export type BattleEvents = {
+    '-ability': ['-ability', PokemonIdent, Ability],
+    '-activate': ['-activate', PokemonIdent, Effect],
+    '-boost': ['-boost', PokemonIdent, Stat, string],
+    'c': ['c', Username, string],
+    '-damage': ['-damage', PokemonIdent, string, undefined],
+    '-singleturn': ['-singleturn', PokemonIdent, Move],
+    'gen': ['gen', string],
+    '-heal': ['-heal', PokemonIdent, string],
+    'cant': ['cant', PokemonIdent, string],
+    '-fail': ['-fail', PokemonIdent, string, undefined],
+    'faint': ['faint', string],
+    'gametype': ['gametype', string],
+    '-mega': ['-mega', PokemonIdent, string, string],
+    '-miss': ['-miss', PokemonIdent, PokemonIdent],
+    '-immune': ['-immune', PokemonIdent],
+    'inactive': ['inactive', string],
+    '-item': ['-item', PokemonIdent, string, string],
+    'j': ['j', Username],
+    'l': ['l', Username],
+    'win': ['win', Username],
+    'move': ['move', PokemonIdent, Move, PokemonIdent, string | undefined],
+    '-unboost': ['-unboost', PokemonIdent, Stat, string],
+    'poke': ['poke', string, string],
+    'rated': ['rated'],
+    'request': ['request', string],
+    'player': ['player', 'p1' | 'p2', Username, string],
+    'raw': ['raw', string],
+    '-resisted': ['-resisted', PokemonIdent],
+    '-status': ['-status', PokemonIdent, string],
+    '-crit': ['-crit', PokemonIdent],
+    'switch': ['switch', PokemonIdent, string],
+    'teamsize': ['teamsize', string],
+    'savereplay': ['savereplay'],
+    'turn': ['turn', string]
 }
 
-export interface PSRequest<T extends PSMessage> {
-    isResponse(m: T): boolean;
-    buildResponse(m: T): any;
-    toString(): string;
+export type BattleEventsName = keyof BattleEvents;
+export type BattleEventsType = BattleEvents[BattleEventsName];
+
+export type GlobalEventsName = keyof GlobalEvents;
+export type GlobalEventsType = GlobalEvents[GlobalEventsName];
+
+export type EventsName = GlobalEventsName & GlobalEventsName;
+
+export abstract class PSRequest<T extends GlobalEventsType> {
+    T!: T;
+    abstract isResponse(m: GlobalEventsType | BattleEventsType): boolean;
+    abstract buildResponse(m: T): any;
+    abstract toString(): string;
 }
 
-export interface PSRoomRequest<T extends PSMessage> extends PSRequest<T> {
-    room: string;
-    isResponse(m: T): boolean;
-    buildResponse(m: T): any;
-    toString(): string;
+export abstract class PSRoomRequest<T extends GlobalEventsType> extends PSRequest<T> {
+    room: string = '';
 }
 
-export class PSSaveBattleRequest implements PSRoomRequest<QueryResponse> {
-    room: string;
-
+export class PSSaveBattleRequest extends PSRoomRequest<['queryresponse', string]> {
     constructor(room: string) {
+        super();
         this.room = room;
     }
 
-    isResponse(m: QueryResponse): boolean {
-        return m.type == 'savereplay';
+    isResponse(m: BattleEventsType): boolean {
+        return m[0] == 'savereplay';
     }
 
-    buildResponse(m: QueryResponse) {
-        return JSON.parse(m.data);
+    buildResponse(m: this['T']) {
+        return JSON.parse(m[1]);
     }
 
     toString(): string {
@@ -39,69 +89,27 @@ export class PSSaveBattleRequest implements PSRoomRequest<QueryResponse> {
     }
 }
 
-export class PSCheckTeamRequest implements PSRequest<Popup> {
+export class PSCheckTeamRequest extends PSRequest<['popup', string]> {
     format: string;
     constructor(format: string) {
+        super();
         this.format = format;
     }
 
-    isResponse(m: Popup): boolean {
-        return m.text.indexOf('Your team') == 0;
+    isResponse(m: this['T']): boolean {
+        return m[1].indexOf('Your team') == 0;
     }
 
-    buildResponse(m: Popup): any {
-        let res = m.text.split('||');
+    buildResponse(m: this['T']): any {
+        let res = m[1].split('||');
         let failed = res[0].indexOf('rejected') != -1;
         let reasons = res.slice(2);
-        return {failed, reasons};
+        return { failed, reasons };
     }
 
     toString(): string {
         return `|/vtm ${this.format}`;
     }
-}
-
-export interface PSRoomSaveRequest extends PSRequest<QueryResponse> {
-    room: PSRoom; 
-}
-
-export class PSMessage {
-    event_name: string = '';
-}
-
-export class PSBattleMessage extends PSMessage {
-    name: string = '';
-    params: any[] = [];
-}
-
-export class UpdateUser extends PSMessage {
-    user: string = '';
-    avatar: string = '';
-}
-
-export class UpdateSearchMessage extends PSMessage {
-    searches: {games: string[]} = {games: []};
-}
-
-export class Formats extends PSMessage {
-    formats: string[] = [];
-}
-
-export class QueryResponse extends PSMessage {
-    data: string = '';
-    type: string = '';
-}
-
-export class Popup extends PSMessage {
-    text = '';
-}
-
-export class Challstr extends PSMessage {
-    challstr: string = '';
-}
-
-export class PSLeaveMessage extends PSBattleMessage {
-    username: string = '';
 }
 
 export class MoveOrder {
@@ -118,159 +126,24 @@ export class PokemonOrder {
     canMegaEvo = false;
 }
 
-export class PSRequestMessage extends PSBattleMessage {
-    active: PokemonOrder[] = [];
-    side: { pokemon?: ShowdownMon[] } = {};
-    rqid: number = 0;
-}
-
-export class PSFaintMessage extends PSBattleMessage {
-    nick = '';
-}
-
-export class PSChatMessage extends PSBattleMessage {
-    username = '';
-    content = '';
-}
-
-export class PSSwitchMessage extends PSBattleMessage {
-    nick = '';
-    status = '';
-}
-
-export class PSPlayerDecl extends PSBattleMessage {
-    alias?: 'p1' | 'p2';
-    showdown_name = '';
-    avatar = '';
-}
-
-export class PSWinMessage extends PSLeaveMessage{} 
-
-let messageToPSBattleMessage = (d: string): PSBattleMessage => {
-    let ret: PSBattleMessage = new PSBattleMessage();
+let packetToMessage = <T extends (BattleEventsType | GlobalEventsType)>(d: string): T => {
     let s = d.split('|');
     s.shift();
-    /*
-    faint: this.faint,
-    inactive: this.inactive
-    */
-    switch(s[0]) {
-        case 'faint':
-            let f = new PSFaintMessage();
-            f.nick = s[1];
-            ret = f;
-            break;
-        case 'player':
-            //player|p2|POO IN SPACE|278
-            let pl = new PSPlayerDecl();
-            pl.alias = s[1] as 'p1' | 'p2';
-            pl.showdown_name = s[2];
-            pl.avatar = s[3];
-            ret = pl;
-            break;
-        case 'switch':
-            let sw = new PSSwitchMessage();
-            sw.nick = s[1];
-            sw.status = s[2];
-            ret = sw;
-            break;
-        case 'win':
-            let u = new PSWinMessage();
-            u.username = s[1].trim();
-            ret = u;
-            break; 
-        case 'c': // chat
-            let c = new PSChatMessage();
-            c.username = s[1].trim();
-            c.content = s[2];
-            ret = c;
-            break;
-        case 'request':
-            let r = new PSRequestMessage();
-            let js = JSON.parse(s.slice(1).join('|'));
-            r.active = js.active;
-            r.side = js.side;
-            r.rqid = js.rqid;
-            ret = r;
-            break;
-        case 'l': // chat
-        case 'j': // chat
-            let l = new PSLeaveMessage();            
-            l.username = s[1].trim();
-            ret = l;
-            break;
-        default:
-            ret = new PSBattleMessage();
-    }
-    ret.name = s[0];
-    return ret;
-}
-
-let messageToPSMessage = (d: string): PSMessage => {
-    let ret: PSMessage;
-    let s = d.split('|');
-    s.shift();
-    switch (s[0]) {
-        case 'updateuser':
-            let u = new UpdateUser();
-            u.user = s[1];
-            u.avatar = s[3];
-            ret = u;
-            break;
-        case 'queryresponse':
-            let qr = new QueryResponse();
-            qr.type = s[1];
-            qr.data = s.slice(2).join('|');
-            ret = qr;
-            break;
-        case 'popup':
-            let p = new Popup();
-            p.text = s.slice(1).join('|');
-            ret = p;
-            break;
-        case 'formats':
-            ret = new Formats();
-            /// don't care about that yet
-            break;
-        case 'challstr':
-            let v = new Challstr();
-            v.challstr = s.slice(1).join('|');
-            ret = v;
-            break;
-        case 'updatesearch':
-            let usm = new UpdateSearchMessage();
-            usm.searches = JSON.parse(s.slice(1).join('|'));
-            ret = usm;
-        default:
-            ret = new PSMessage;
-    }
-    ret.event_name = s[0];
-    return ret;
+    return s as T;
 }
 
 export let eventToPSBattleMessage = (me: MessageEvent): {
-    room: string, 
-    events: PSBattleMessage[]
+    room: string,
+    events: BattleEventsType[]
 } => {
     let data: string[] = me.data.split('\n');
     return {
         room: data.shift()!.substr(1),
-        events: data.map(messageToPSBattleMessage)
+        events: data.map(d => packetToMessage(d))
     }
 }
 
-export let eventToPSMessages = (me: MessageEvent): PSMessage[] => {
+export let eventToPSMessages = (me: MessageEvent): GlobalEventsType[] => {
     let data: string[] = me.data.split('\n');
-    return data.map(messageToPSMessage);
+    return data.map(d => packetToMessage(d));
 }
-
-export let battleEventNameToType:
- {[idx:string]: any} = {
-    l: PSLeaveMessage,
-    faint: PSFaintMessage,
-    win: PSWinMessage,
-    "switch": PSSwitchMessage,
-    c: PSChatMessage,
-    j: PSLeaveMessage,
-    inactve: PSLeaveMessage,
-};

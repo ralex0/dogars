@@ -1,10 +1,8 @@
 import * as SockJS from 'sockjs-client';
 
-import { eventToPSMessages, PSMessage, Challstr, eventToPSBattleMessage, PSRequest, PSRoomRequest, QueryResponse, Formats, UpdateUser } from './PSMessage';
+import { eventToPSMessages, GlobalEventsType, eventToPSBattleMessage, PSRequest, PSRoomRequest, EventsName, BattleEvents, GlobalEventsName, BattleEventsType, GlobalEvents, BattleEventsName } from './PSMessage';
 import { PSRoom } from './PSRoom';
 import { Player } from './Player';
-
-import { match } from '../Website/utils';
 
 import { logger } from '../Backend/logger';
 import { settings } from '../Backend/settings';
@@ -15,13 +13,13 @@ export class PSConnection {
 	wscache: string[] = [];
 	iid?: NodeJS.Timer;
 	challstrraw: string = '';
-	eventqueue: PSMessage[] = [];
+	eventqueue: GlobalEventsType[] = [];
 	rooms: Map<string, PSRoom> = new Map<string, PSRoom>();
 	messagequeue: MessageEvent[] = [];
 	openprom?: () => void;
 	openrej?: () => void;
 	opened = false;
-	readprom?: { filter: any, res: (ev: PSMessage) => void };
+	readprom?: { name?: EventsName, res: (ev: any) => void };
 	requests: ({ req: PSRequest<any>; res: (value?: any) => void; })[] = [];
 	roomrequests: ({ req: PSRoomRequest<any>; res: (value?: any) => void; })[] = [];
 
@@ -64,7 +62,7 @@ export class PSConnection {
 					let remove = mesgs.some(e => r.req.isResponse(e));
 					return !handled;
 				});
-				if (this.readprom && (this.readprom.filter === undefined || match(mesgs[0], this.readprom.filter))) {
+				if (this.readprom && (this.readprom.name === undefined || mesgs[0][0] == this.readprom.name)) {
 					this.readprom.res(mesgs.shift()!);
 					this.readprom = undefined;
 				}
@@ -97,6 +95,7 @@ export class PSConnection {
 	send(data: string | ArrayBufferLike | Blob | ArrayBufferView) {
 		if (!this.ws)
 			throw 'Attempted to send without initialized socket';
+		console.log(data);
 		this.ws.send(data);
 	}
 
@@ -120,14 +119,23 @@ export class PSConnection {
 		return ret;
 	}
 
-	read(filter?: any): Promise<PSMessage> {
-		return new Promise<PSMessage>((res, rej) => {
-			if (this.eventqueue.length >= 1) {
-				let idx = this.eventqueue.findIndex(m => match(m, filter));
-				return res(this.eventqueue.splice(idx, 1)[0]!);
-			}
-			this.readprom = { filter, res };
-		});
+	// I want to impregnate type systems
+	read<T extends EventsName>(name?: T) {
+		return new Promise<
+			T extends GlobalEventsName ? GlobalEvents[T] :
+			T extends BattleEventsName ? BattleEvents[T] :
+			never>((res, rej) => {
+				if (this.eventqueue.length >= 1) {
+					let idx = this.eventqueue.findIndex(m => m[0] == name);
+					let elem = this.eventqueue.splice(idx, 1)[0];
+					let even: GlobalEventsType = elem;
+					return res(even as
+						T extends GlobalEventsName ? GlobalEvents[T] :
+						T extends BattleEventsName ? BattleEvents[T] :
+						never);
+				}
+				this.readprom = { name, res };
+			});
 	}
 
 	close() {
@@ -162,15 +170,13 @@ export class PSConnection {
 		try {
 			await this.open();
 
-			let user = await this.read({ event_name: 'updateuser' }) as UpdateUser;
-			let formats = await this.read({
-				event_name: 'formats'
-			}) as Formats;
-			let rooms = await this.read({
-				event_name: 'queryresponse'
-			}) as QueryResponse;
+			let user = await this.read('updateuser');
 			// don't care yet
-			this.challstrraw = (await this.read({ event_name: 'challstr' }) as Challstr).challstr;
+			let formats = await this.read('formats');
+			let rooms = await this.read('queryresponse');
+			let challstr = await this.read('challstr');
+			challstr.shift();
+			this.challstrraw = challstr.join('|');
 			this.usable = true;
 
 			// heartbeat

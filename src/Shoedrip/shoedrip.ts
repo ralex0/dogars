@@ -6,6 +6,14 @@ import { Champ } from './Champ';
 import { fchan } from '../Yotsuba/fchan';
 
 import { snooze } from '../Website/utils';
+import { connection } from '../Showdown/PSConnection';
+import CringeHandler from '../Showdown/BattleHandlers/CringeHandler';
+import DigitsChecker from '../Showdown/BattleHandlers/DigitsChecker';
+import EndHandler from '../Showdown/BattleHandlers/EndHandler';
+import GreetingHandler from '../Showdown/BattleHandlers/GreetingHandler';
+import HijackHandler from '../Showdown/BattleHandlers/HijackHandler';
+import InfoAggregator from '../Showdown/BattleHandlers/InfoAggregator';
+import Announcer from '../Showdown/BattleHandlers/Announcer';
 
 export let champ: Champ = new Champ();
 export let cthread: { no?: number, tim?: number } = {};
@@ -43,7 +51,7 @@ let getCurrentChamp = async (thread: fchan.Thread) => {
             continue;
         let content = thread.posts![i].com!.replace(/<(?:.|\n)*?>/gm, '');
         let matches;
-        if ((matches = content.match(/(https?:\/\/)?play.pokemonshowdown.com\/battle-(.*)-([0-9]*)/g))) {
+        if ((matches = content.match(/(https?:\/\/)?play.pokemonshowdown.com\/battle-(.*)-([0-9]+)/g))) {
             let curtime = ~~(+new Date() / 1000);
             champ = <Champ>{
                 name: thread.posts![i].name,
@@ -79,7 +87,17 @@ export let shoestart = async () => {
             cthread = { no: thread.id, tim: thread.posts![0].tim! };
             if (champ.current_battle != oldbattle && champ.active) {
                 oldbattle = champ.current_battle;
-                let bm = new BattleMonitor(champ, !!champ.name);
+                let bm = new BattleMonitor(connection, champ.current_battle);
+                let ia = new InfoAggregator(champ);
+                bm.attachListeners([
+                    new Announcer,
+                    new CringeHandler,
+                    new DigitsChecker,
+                    new GreetingHandler,
+                    ia,
+                    //new HijackHandler(ia),
+                    new EndHandler
+                ]);                
                 bm.monitor();
             }
             if (champ.active) {

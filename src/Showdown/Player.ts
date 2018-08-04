@@ -2,7 +2,7 @@ import request = require('request-promise-native');
 
 import { PSConnection } from './PSConnection';
 import { ShowdownMon } from './ShowdownMon';
-import { PSRequestMessage, PSRequest } from './PSMessage';
+import { PSRequest } from './PSMessage';
 import fs = require('fs');
 import { settings } from '../Backend/settings';
 import { toId } from '../Website/utils';
@@ -46,7 +46,7 @@ export let upkeep = async (sid: string, challstr: string) => {
 		throw LoginError.UnexpectedResponse;
 	body = body.substr(1);
 	body = JSON.parse(body);
-	if (body.assertion[0] == ';') {
+	if (!body.assertion || body.assertion[0] == ';') {
 		throw LoginError.MalformedAssertion;
 	}
 	return body.assertion;
@@ -87,7 +87,7 @@ export let getassertion = async (user: string, pass: string | undefined, challen
 		return [cookies[0].value, body.assertion];
 	}
 	else if (body.length > 10)
-		return body;
+		return ['', body];
 	throw LoginError.MalformedAssertion;
 }
 
@@ -123,8 +123,13 @@ export class Player {
 
 		let assertion;
 		if (sid) {
-			assertion = await upkeep(sid, challstr);
-		} else {
+			try {
+				assertion = await upkeep(sid, challstr);
+			} catch(e) {
+				console.log('Failed to reuse sid, relogin in...', e);
+			}
+		}
+		if (!assertion) {
 			try {
 				throw LoginError.MalformedAssertion;
 				[sid, assertion] = await getassertion(this.user!, this.pass, challstr);
@@ -169,13 +174,14 @@ export class Player {
 		if (this.teamCache && this.teamCache.has(battle))
 			return this.teamCache.get(battle);
 		let room = this.con.rooms.get(battle)!;
-		let event = await room.read({
-			name: 'request'
-		}) as PSRequestMessage;
+		let event = await room.read('request');
 		try {
-			this.teamCache.set(battle, event.side.pokemon!);
+			let req = JSON.parse(event[1]);
+			if (!req.side || !req.side.pokemon)
+				throw 'No side pokemons';
+			this.teamCache.set(battle, req.side.pokemon!);
 		} catch (e) {
-			console.log('could not set team:', event);
+			console.log('could not set team:', e);
 		}
 		return this.teamCache.get(battle);
 	}

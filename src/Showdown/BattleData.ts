@@ -6,12 +6,14 @@ export class MemeStats {
 	dead: boolean = false;
 }
 
+export type playerAlias = 'p1' | 'p2';
+
 export class BattleData {
 	champ!: Champ;
 	dist: number = Infinity;
 	roomid: string = '';
 	finished: boolean = false;
-	champ_alias?: 'p1' | 'p2';
+	champ_alias?: playerAlias;
 	active_meme?: string;
 	memes: MemeStats[] = []
 }
