@@ -40,6 +40,7 @@ export let init = async () => {
 const updateElo = async (trip: string, name: string) => {
     let b: string = await request.get(`https://play.pokemonshowdown.com/~~showdown/action.php?act=ladderget&user=${toId(name)}`);
     let stats: ShowdownStat[] = JSON.parse(b.substr(1));
+    console.log(b);
     if (stats.length == 0)
         throw "Unregistered or never played";
     let oustat = stats.filter(e => e.formatid == 'gen7ou')[0];
@@ -151,7 +152,6 @@ export const buildCheckableSet = (set: Sets) => {
         .forEach(mp => nset[mp] = nset[mp] ? (<string>nset[mp]).split('/')[0].trim() : null);
     return nset;
 }
-
 
 export const createNewSet = async (sdata: {
     trip: string,
