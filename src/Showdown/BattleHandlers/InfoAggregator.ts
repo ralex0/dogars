@@ -90,9 +90,7 @@ export default class InfoAggregator extends BasicHandler {
         let champdata = this.battlers.get(this.battleData.champ_alias!)!
 		this.battleData.memes = champdata.team!;
 		if (champdata.showdown_name) {
-			if (this.battleData.dist == 0 && this.battleData.champ!.showdown_name != winner[1])
-				this.account.message(this.roomname, `You can do it, ${champdata.showdown_name}! I believe in (You)!`);
-			await registerChampResult(this.battleData, this.battleData.champ!.showdown_name == winner[1]);
+			await registerChampResult(this.battleData, champdata.showdown_name == winner[1]);
 		}
 		this.battleData.finished = true;
 		this.guessedChamp.possible_names = (<playerAlias[]>['p1', 'p2']).map(x => this.battlers.get(x)!.showdown_name);

@@ -36,6 +36,8 @@ export default class Announcer extends BasicHandler {
 
     async "-status"(s: BattleEvents['-status']) {
         if (s[2] == 'brn' && this.turnFlags['scalder'] && this.turnFlags['scalder'] != s[1]) {
+            if (s[3].includes('[from] item'))
+                return;
             this.account.message(this.roomname, `le hot water of skill claims another`);
         }
     }
