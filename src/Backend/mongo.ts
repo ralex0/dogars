@@ -40,7 +40,6 @@ export let init = async () => {
 const updateElo = async (trip: string, name: string) => {
     let b: string = await request.get(`https://play.pokemonshowdown.com/~~showdown/action.php?act=ladderget&user=${toId(name)}`);
     let stats: ShowdownStat[] = JSON.parse(b.substr(1));
-    console.log(name, trip, b);
     if (stats.length == 0)
         throw "Unregistered or never played";
     let oustat = stats.filter(e => e.formatid == 'gen7ou')[0];
@@ -55,7 +54,7 @@ const updateElo = async (trip: string, name: string) => {
                 elo: ouelo,
                 showdown_name: name
             }
-    });
+        });
 }
 
 export const registerChampResult = async (battleData: BattleData, hasWon: boolean): Promise<void> => {
@@ -66,7 +65,8 @@ export const registerChampResult = async (battleData: BattleData, hasWon: boolea
         console.log(e);
     }
     let inc = hasWon ? 'wins' : 'loses';
-    let champ = ChampsCollection.findOne({ trip: battleData.champ.trip });
+    let champ = await ChampsCollection.findOne({ trip: battleData.champ.trip });
+    console.log(champ);
     if (!champ) {
         console.log('Champ', battleData.champ.name, 'not found, adding...');
         ChampsCollection.insertOne(new Champ(battleData.champ.name, battleData.champ.trip));
@@ -75,17 +75,17 @@ export const registerChampResult = async (battleData: BattleData, hasWon: boolea
         await ChampsCollection.updateOne({
             trip: battleData.champ.trip
         }, {
-            $set: { avatar: battleData.champ.avatar }
-        });
+                $set: { avatar: battleData.champ.avatar }
+            });
     await ChampsCollection.updateOne({
         trip: battleData.champ.trip
     }, {
-        $inc: { [inc]: 1 },
-        $set: {
-            name: battleData.champ.name,
-            last_seen: +new Date
-        }
-    });
+            $inc: { [inc]: 1 },
+            $set: {
+                name: battleData.champ.name,
+                last_seen: +new Date
+            }
+        });
     if (!hasWon)
         return;
     await pokeUtils.saveReplay(battleData.champ.current_battle);
