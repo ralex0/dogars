@@ -30,7 +30,7 @@ export default class InfoAggregator extends BasicHandler {
         this.battlers.set(pl[1]!, nc);
         let dist = levenshtein(this.battleData.champ!.name || '', pl[2]);
         if (dist < this.battleData.dist!) {
-            this.battleData.champ!.showdown_name = pl[3];
+            this.battleData.champ!.showdown_name = pl[2];
             this.battleData.champ!.avatar = pl[3];
             this.battleData.champ_alias = pl[1];
             this.battleData.dist = dist;
