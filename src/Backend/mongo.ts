@@ -61,30 +61,31 @@ const updateElo = async (trip: string, name: string) => {
 export const registerChampResult = async (battleData: BattleData, hasWon: boolean): Promise<void> => {
     let replayurl: string = '';
     try {
-        updateElo(battleData.champ.trip, battleData.champ.showdown_name);
+        await updateElo(battleData.champ.trip, battleData.champ.showdown_name);
     } catch (e) {
         console.log(e);
     }
     let inc = hasWon ? 'wins' : 'loses';
     let champ = ChampsCollection.findOne({ trip: battleData.champ.trip });
     if (!champ) {
+        console.log('Champ', battleData.champ.name, 'not found, adding...');
         ChampsCollection.insertOne(new Champ(battleData.champ.name, battleData.champ.trip));
     }
     if (battleData.champ.avatar != '166')
         await ChampsCollection.updateOne({
             trip: battleData.champ.trip
         }, {
-                $set: { avatar: battleData.champ.avatar }
-            });
+            $set: { avatar: battleData.champ.avatar }
+        });
     await ChampsCollection.updateOne({
         trip: battleData.champ.trip
     }, {
-            $inc: { [inc]: 1 },
-            $set: {
-                name: battleData.champ.name,
-                last_seen: +new Date
-            }
-        });
+        $inc: { [inc]: 1 },
+        $set: {
+            name: battleData.champ.name,
+            last_seen: +new Date
+        }
+    });
     if (!hasWon)
         return;
     await pokeUtils.saveReplay(battleData.champ.current_battle);
