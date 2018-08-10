@@ -3,7 +3,7 @@ import fs = require('fs');
 import * as express from 'express';
 import bodyParser = require('body-parser');
 import compression = require('compression');
-import { Collection } from 'mongodb';
+import { Collection, CollectionAggregationOptions } from 'mongodb';
 import cp = require('child_process');
 import tripcode = require('tripcode');
 
@@ -12,6 +12,7 @@ import * as db from '../Backend/mongo';
 import { Replay } from '../Backend/Models/Replay';
 import { decompose, banners, getSetOfTheDay } from './utils';
 import { champ, cthread } from '../Shoedrip/shoedrip';
+import { Champ } from '../Backend/Models/Champ';
 
 export let api = express();
 api.set('env', 'production');
@@ -19,7 +20,7 @@ api.use(bodyParser.json());
 api.use(bodyParser.urlencoded({ extended: true }));
 api.use(compression());
 
-async function paginate<T>(coll: Collection<any>, prop: Object[], pspp: number, ppage: number): Promise<[number, T[]]> {
+async function paginate<T>(coll: Collection<T>, prop: db.AggregationPipelineStage<T>[], pspp: number, ppage: number): Promise<[number, T[]]> {
     if (ppage <= 0)
         ppage = 1;
     if (pspp <= 0)
@@ -34,7 +35,10 @@ async function paginate<T>(coll: Collection<any>, prop: Object[], pspp: number, 
             data: [...prop, { $skip: (page - 1) * spp }, { $limit: spp }]
         }
     }]);
-    let res = await resc.next();
+    let res = await resc.next() as (T & {
+        metadata: [{ total: number }],
+        data: T[]
+    });
     return [res.metadata.length ? res.metadata[0].total : 0, res.data];
 }
 
@@ -102,14 +106,25 @@ api.get('/champs', async (req, res) => {
     if (allowed.includes(req.query.sort))
         sort = req.query.sort;
     let reversed = req.query.reverse == 'true';
-    let r = await paginate(db.ChampsCollection, [{
+    let a = [{
         $addFields: {
             total: {
                 $add: ['$wins', '$loses']
             },
             winrate: { $divide: ['$wins', { $sum: ['$wins', '$loses'] }] },
         }
-    }, { $sort: { [sort]: reversed ? 1 : -1 } }], +req.query.spp, +req.query.page);
+    }, {
+        $sort: {
+            [sort]: reversed ? 1 : -1
+        }
+    }];
+    type t = keyof typeof a[0];
+    let params: db.AggregationPipelineStage<Champ>[] = a;
+    if (req.query.name)
+        params.unshift({
+            $match: new RegExp(req.query.name, 'i')
+        });
+    let r = await paginate(db.ChampsCollection, params, +req.query.spp, +req.query.page);
     res.json(r);
 });
 
@@ -145,12 +160,12 @@ let commitstr = cp.spawnSync('git', ['-C', settings.ressources, 'log', `--pretty
 let grouped = commitstr.split('\x00\n').map(s => s.split('\x00'));
 
 let commits = grouped.map(g => {
-  return {
-    hash: g[0],
-    date: g[1],
-    subject: g[2] || '',
-    message: g[3] || ''
-  };
+    return {
+        hash: g[0],
+        date: g[1],
+        subject: g[2] || '',
+        message: g[3] || ''
+    };
 }).filter(m => !m.subject.toLowerCase().includes('merge'));
 
 api.get('/changelog', (req, res) => {

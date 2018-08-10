@@ -1,13 +1,15 @@
+import { toId } from "../Website/utils";
+
 export type PokemonIdent = string;
+export type Username = string;
 export type Ability = string;
 export type Effect = string;
 export type Stat = string;
-export type Username = string;
 export type Move = string;
 
 export type GlobalEvents = {
     updateuser: ['updateuser', Username, string],
-    queryresponse: ['queryresponse', string],
+    queryresponse: ['queryresponse', string, string | undefined, string | undefined],
     popup: ['popup', string],
     formats: ['formats', string],
     challstr: ['challstr', string],
@@ -43,7 +45,7 @@ export type BattleEvents = {
     'player': ['player', 'p1' | 'p2', Username, string],
     'raw': ['raw', string],
     '-resisted': ['-resisted', PokemonIdent],
-    '-status': ['-status', PokemonIdent, string],
+    '-status': ['-status', PokemonIdent, string, string | undefined],
     '-crit': ['-crit', PokemonIdent],
     'switch': ['switch', PokemonIdent, string],
     'teamsize': ['teamsize', string],
@@ -70,7 +72,7 @@ export abstract class PSRoomRequest<T extends GlobalEventsType> extends PSReques
     room: string = '';
 }
 
-export class PSSaveBattleRequest extends PSRoomRequest<['queryresponse', string]> {
+export class PSSaveBattleRequest extends PSRoomRequest<['queryresponse', string, string | undefined, string | undefined]> {
     constructor(room: string) {
         super();
         this.room = room;
@@ -109,6 +111,45 @@ export class PSCheckTeamRequest extends PSRequest<['popup', string]> {
 
     toString(): string {
         return `|/vtm ${this.format}`;
+    }
+}
+
+export type UserDetails = {
+    userid: string,
+    avatar: string | number,
+    group: string,
+    rooms: { [k: string]: { [key in 'p1' | 'p2']: string } } | false
+};
+
+export class PSUserDetails extends PSRequest<['queryresponse', 'userdetails', string | undefined, string | undefined]> {
+    user: string;
+    usern: string;
+    constructor(user: string) {
+        super();
+        this.user = user;
+        this.usern = toId(user);
+    }
+
+    isResponse(m: this['T']): boolean {
+        let copy = m.slice();
+        let b = m[0] == 'queryresponse' && m[1] == 'userdetails';
+        copy.splice(0, 2);
+        let js = copy.join('|');
+        let data: UserDetails = JSON.parse(js);
+        return data.userid == this.usern;
+    }
+
+    buildResponse(m: this['T']): any {
+        let copy = m.slice();
+        let b = m[0] == 'queryresponse' && m[1] == 'userdetails';
+        copy.splice(0, 2);
+        let js = copy.join('|');
+        let data: UserDetails = JSON.parse(js);
+        return data;
+    }
+
+    toString(): string {
+        return `|/cmd userdetails ${this.usern}`;
     }
 }
 

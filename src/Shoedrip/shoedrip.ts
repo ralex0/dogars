@@ -79,6 +79,21 @@ function timeOutPromise<T>(prom: Promise<T>, timeout: number): Promise<T> {
     return Promise.race([prom, new Promise<T>((res, rej) => setTimeout(rej, timeout, 'Timed out'))]);
 }
 
+export let monitorPlayer = (champ: Champ) => {
+    let bm = new BattleMonitor(connection, champ.current_battle);
+    let ia = new InfoAggregator(champ);
+    bm.attachListeners([
+        new Announcer(ia),
+        new CringeHandler,
+        new DigitsChecker,
+        new GreetingHandler,
+        ia,
+        //new HijackHandler(ia),
+        new EndHandler(ia)
+    ]);                
+    bm.monitor();
+}
+
 export let shoestart = async () => {
     while (true) {
         try {
@@ -87,18 +102,7 @@ export let shoestart = async () => {
             cthread = { no: thread.id, tim: thread.posts![0].tim! };
             if (champ.current_battle != oldbattle && champ.active) {
                 oldbattle = champ.current_battle;
-                let bm = new BattleMonitor(connection, champ.current_battle);
-                let ia = new InfoAggregator(champ);
-                bm.attachListeners([
-                    new Announcer,
-                    new CringeHandler,
-                    new DigitsChecker,
-                    new GreetingHandler,
-                    ia,
-                    //new HijackHandler(ia),
-                    new EndHandler
-                ]);                
-                bm.monitor();
+                monitorPlayer(champ);
             }
             if (champ.active) {
                 let dbchamp = await mongo.ChampsCollection.findOne({ trip: champ.trip });

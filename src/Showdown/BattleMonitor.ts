@@ -17,6 +17,7 @@ export class BattleMonitor {
 	constructor(acc: Player, link: string) {
 		this.url = link;
 		this.account = acc;
+		console.log(link);
 		this.room = this.account.tryJoin(link.match(/(battle-.*)\/?/)![0]);
 	}
 

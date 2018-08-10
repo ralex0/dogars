@@ -1,8 +1,15 @@
 import BasicHandler from "./BasicHandler";
 import { BattleEvents } from "../PSMessage";
+import InfoAggregator from "./InfoAggregator";
 
 export default class Announcer extends BasicHandler {
     private warned: boolean = false;
+    ia: InfoAggregator;
+
+    constructor(ia: InfoAggregator) {
+        super();
+        this.ia = ia;
+    }
 
     nummons: {p1: number, p2: number} = {p1: 0, p2: 0};
     async teamsize(ts: BattleEvents['teamsize']) {
@@ -15,6 +22,8 @@ export default class Announcer extends BasicHandler {
 
     async inactive(i: BattleEvents['inactive']) {
         if (this.warned)
+            return;
+        if (i[1].includes(this.ia.guessedChamp.showdown_name))
             return;
         this.warned = true;
         this.account.message(this.roomname, `wtf turn that off`);
@@ -36,7 +45,7 @@ export default class Announcer extends BasicHandler {
 
     async "-status"(s: BattleEvents['-status']) {
         if (s[2] == 'brn' && this.turnFlags['scalder'] && this.turnFlags['scalder'] != s[1]) {
-            if (s[3].includes('[from] item'))
+            if (s[3] !== undefined && s[3]!.includes('[from] item'))
                 return;
             this.account.message(this.roomname, `le hot water of skill claims another`);
         }

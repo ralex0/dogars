@@ -22,6 +22,20 @@ export let ChampsCollection: Collection<Champ>;
 export let SetsCollection: Collection<Sets>;
 export let ReplaysCollection: Collection<Replay>;
 
+export type QueryOperation<T> =
+    { [op in '$and' | '$add' | '$divide']: Array<AggregationQuery<T>> } | {};
+
+
+type QueryValue = string | number | RegExp;
+type AggregationQuery<T> = QueryFieldOf<T> | QueryOperation<T> | QueryValue;
+type QueryFieldOf<T> = { [key in keyof T]?: QueryValue };
+
+export type AggregationPipelineStage<T> =
+    { $match: AggregationQuery<QueryFieldOf<T>> } |
+    { $addFields: { [k: string]: QueryOperation<T> } } |
+    { $sort: { [key in keyof T]?: -1 | 1 } } |
+    undefined;
+
 let connection: MongoClient;
 let inited = false;
 export let init = async () => {
@@ -59,6 +73,8 @@ const updateElo = async (trip: string, name: string) => {
 
 export const registerChampResult = async (battleData: BattleData, hasWon: boolean): Promise<void> => {
     let replayurl: string = '';
+    if (!inited)
+        return;
     try {
         await updateElo(battleData.champ.trip, battleData.champ.showdown_name);
     } catch (e) {
@@ -153,6 +169,8 @@ export const buildCheckableSet = (set: Sets) => {
         .forEach(mp => nset[mp] = nset[mp] ? (<string>nset[mp]).split('/')[0].trim() : null);
     return nset;
 }
+
+type t = [number, number?];
 
 export const createNewSet = async (sdata: {
     trip: string,
