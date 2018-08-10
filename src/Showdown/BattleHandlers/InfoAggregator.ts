@@ -23,7 +23,6 @@ export default class InfoAggregator extends BasicHandler {
             return;
         let nc = new Champ();
         nc.showdown_name = pl[2];
-        console.log(`${pl[2]} is ${!nc.regged ? 'not' : ''} regged`);
         nc.avatar = pl[3];
 
         this.battlers.set(pl[1]!, nc);

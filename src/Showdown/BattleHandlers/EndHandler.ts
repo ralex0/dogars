@@ -3,7 +3,7 @@ import { BattleMonitor } from "../BattleMonitor";
 import { snooze } from "../../Website/utils";
 import { PSUserDetails, UserDetails } from "../PSMessage";
 import InfoAggregator from "./InfoAggregator";
-import { monitorPlayer } from "../../Shoedrip/shoedrip";
+import { monitorPlayer, champ } from "../../Shoedrip/shoedrip";
 
 export default class EndHandler extends BasicHandler {
     bm!: BattleMonitor;
@@ -35,6 +35,9 @@ export default class EndHandler extends BasicHandler {
                 }
                 await snooze(1000);
             }
+        else {
+            console.log(`Didn't follow champ because`, this.ia.battleData, champ);
+        }
         this.account.tryLeave(this.roomname);
         this.bm.listeners = [];
     }

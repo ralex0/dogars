@@ -11,6 +11,11 @@ export default class GreetingHandler extends BasicHandler {
         }
     }
 
+    async win(w: BattleEvents['win']) {
+        // Do not detach
+        // this.detach && this.detach();
+    }
+
     async c(m: BattleEvents['c']) {
         if (m[1].includes('dogars'))
             return;
