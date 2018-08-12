@@ -30,16 +30,20 @@ export default class Announcer extends BasicHandler {
     }
 
     async cant(c: BattleEvents['cant']) {
-        if (c[2] == 'flinch' || c[2] == 'par')
+        if (c[2] == 'flinch' || c[2] == 'par') {
+            if (c[2] == 'flinch' && this.turnFlags['fotarget'] && this.turnFlags['fotarget'] == c[1])
+                return;
             this.account.message(this.roomname, `nice skill`);
+        }
     }
 
     async move(m: BattleEvents['move']) {
         if (m[3].includes('hoge') && m[4] && m[4] == '[miss]') {
             this.account.message(this.roomname, `HOGE! HOGE! H O G E!`);
-        }
-        else if (m[2] == 'Scald') {
+        } else if (m[2] == 'Scald') {
             this.turnFlags['scalder'] = m[1];
+        } else if (m[2] == 'Fake Out') {
+            this.turnFlags['fotarget'] = m[3];
         }
     }
 

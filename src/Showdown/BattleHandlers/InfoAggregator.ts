@@ -85,12 +85,14 @@ export default class InfoAggregator extends BasicHandler {
     }
     
     async win(winner: BattleEvents['win']) {
-        let champdata = this.battlers.get(this.battleData.champ_alias!)!
-		this.battleData.memes = champdata.team!;
-		if (champdata.showdown_name) {
-			await registerChampResult(this.battleData, champdata.showdown_name == winner[1]);
-		}
+        let champdata = this.battlers.get(this.battleData.champ_alias!);
+        if (champdata) {
+            this.battleData.memes = champdata.team!;
+            if (champdata.showdown_name) {
+                await registerChampResult(this.battleData, champdata.showdown_name == winner[1]);
+            }
+        }
 		this.battleData.finished = true;
-		this.guessedChamp.possible_names = (<playerAlias[]>['p1', 'p2']).map(x => this.battlers.get(x)!.showdown_name);
+		this.guessedChamp.possible_names = ['p1', 'p2'].map(x => this.battlers.get(x as playerAlias)!.showdown_name);
 	}
 }
