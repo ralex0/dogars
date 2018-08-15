@@ -2,7 +2,7 @@ import request = require('request-promise-native');
 
 import { PSConnection } from './PSConnection';
 import { ShowdownMon } from './ShowdownMon';
-import { PSRequest } from './PSMessage';
+import { PSRequest, PSEventType, GlobalEventsType } from './PSMessage';
 import fs = require('fs');
 import { settings } from '../Backend/settings';
 import { toId } from '../Website/utils';
@@ -186,7 +186,7 @@ export class Player {
 		return this.teamCache.get(battle);
 	}
 
-	request(req: PSRequest<any>) {
+	request<T extends GlobalEventsType, R>(req: PSRequest<T, R>) {
 		return this.con.request(req);
 	}
 

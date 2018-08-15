@@ -15,14 +15,7 @@ fs.watch(`${settings.ressources}/public/ban`, { persistent: false }, (e, n) => {
     });
 })
 
-export const extend = (d: any, s: any) => {
-    let ret = d;
-    for (let i in s)
-        d[i] = s[i];
-    return d;
-}
-
-setInterval(() => {ranset = null}, 1000 * 3600 * 24);
+setInterval(() => { ranset = null }, 1000 * 3600 * 24);
 
 export const getSetOfTheDay = async () => {
     if (ranset)
@@ -63,12 +56,14 @@ export let decompose = (obj: { [k: string]: any }): { [k: string]: any }[] => {
     return ret;
 }
 
-export let toId = (text: any) => {
+export let toId = (text: string | number | { id?: string, userid?: string } | undefined | boolean | null) => {
     // this is a duplicate of Dex.getId, for performance reasons
-    if (text && text.id) {
-        text = text.id;
-    } else if (text && text.userid) {
-        text = text.userid;
+    if (text && typeof text == "object") {
+        if (text.id) {
+            text = text.id;
+        } else if (text.userid) {
+            text = text.userid;
+        }
     }
     if (typeof text !== 'string' && typeof text !== 'number') return '';
     return ('' + text).toLowerCase().replace(/[^a-z0-9]+/g, '');

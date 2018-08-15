@@ -9,7 +9,7 @@ export type Move = string;
 
 export type GlobalEvents = {
     updateuser: ['updateuser', Username, string],
-    queryresponse: ['queryresponse', string, string | undefined, string | undefined],
+    queryresponse: ['queryresponse', string, string?, string?],
     popup: ['popup', string],
     formats: ['formats', string],
     challstr: ['challstr', string],
@@ -21,12 +21,12 @@ export type BattleEvents = {
     '-activate': ['-activate', PokemonIdent, Effect],
     '-boost': ['-boost', PokemonIdent, Stat, string],
     'c': ['c', Username, string],
-    '-damage': ['-damage', PokemonIdent, string, undefined],
+    '-damage': ['-damage', PokemonIdent, string, string?],
     '-singleturn': ['-singleturn', PokemonIdent, Move],
     'gen': ['gen', string],
     '-heal': ['-heal', PokemonIdent, string],
     'cant': ['cant', PokemonIdent, string],
-    '-fail': ['-fail', PokemonIdent, string, undefined],
+    '-fail': ['-fail', PokemonIdent, string, string?],
     'faint': ['faint', string],
     'gametype': ['gametype', string],
     '-mega': ['-mega', PokemonIdent, string, string],
@@ -37,7 +37,7 @@ export type BattleEvents = {
     'j': ['j', Username],
     'l': ['l', Username],
     'win': ['win', Username],
-    'move': ['move', PokemonIdent, Move, PokemonIdent, string | undefined],
+    'move': ['move', PokemonIdent, Move, PokemonIdent, string?],
     '-unboost': ['-unboost', PokemonIdent, Stat, string],
     'poke': ['poke', string, string],
     'rated': ['rated'],
@@ -45,7 +45,7 @@ export type BattleEvents = {
     'player': ['player', 'p1' | 'p2', Username, string],
     'raw': ['raw', string],
     '-resisted': ['-resisted', PokemonIdent],
-    '-status': ['-status', PokemonIdent, string, string | undefined],
+    '-status': ['-status', PokemonIdent, string, string?],
     '-crit': ['-crit', PokemonIdent],
     'switch': ['switch', PokemonIdent, string],
     'teamsize': ['teamsize', string],
@@ -59,20 +59,22 @@ export type BattleEventsType = BattleEvents[BattleEventsName];
 export type GlobalEventsName = keyof GlobalEvents;
 export type GlobalEventsType = GlobalEvents[GlobalEventsName];
 
-export type EventsName = GlobalEventsName & GlobalEventsName;
+export type PSEvent = BattleEvents & GlobalEvents;
+export type EventsName = GlobalEventsName | BattleEventsName;
+export type PSEventType = PSEvent[EventsName];
 
-export abstract class PSRequest<T extends GlobalEventsType> {
+export abstract class PSRequest<T extends GlobalEventsType, R> {
     T!: T;
     abstract isResponse(m: GlobalEventsType | BattleEventsType): boolean;
-    abstract buildResponse(m: T): any;
+    abstract buildResponse(m: T): R;
     abstract toString(): string;
 }
 
-export abstract class PSRoomRequest<T extends GlobalEventsType> extends PSRequest<T> {
+export abstract class PSRoomRequest<T extends GlobalEventsType, R> extends PSRequest<T, R> {
     room: string = '';
 }
 
-export class PSSaveBattleRequest extends PSRoomRequest<['queryresponse', string, string | undefined, string | undefined]> {
+export class PSSaveBattleRequest extends PSRoomRequest<['queryresponse', string, string?, string?], {id: string, log: string}> {
     constructor(room: string) {
         super();
         this.room = room;
@@ -91,7 +93,7 @@ export class PSSaveBattleRequest extends PSRoomRequest<['queryresponse', string,
     }
 }
 
-export class PSCheckTeamRequest extends PSRequest<['popup', string]> {
+export class PSCheckTeamRequest extends PSRequest<['popup', string], {failed: boolean, reasons: string[]}> {
     format: string;
     constructor(format: string) {
         super();
@@ -102,7 +104,7 @@ export class PSCheckTeamRequest extends PSRequest<['popup', string]> {
         return m[1].indexOf('Your team') == 0;
     }
 
-    buildResponse(m: this['T']): any {
+    buildResponse(m: this['T']) {
         let res = m[1].split('||');
         let failed = res[0].indexOf('rejected') != -1;
         let reasons = res.slice(2);
@@ -121,7 +123,7 @@ export type UserDetails = {
     rooms: { [k: string]: { [key in 'p1' | 'p2']: string } } | false
 };
 
-export class PSUserDetails extends PSRequest<['queryresponse', 'userdetails', string | undefined, string | undefined]> {
+export class PSUserDetails extends PSRequest<['queryresponse', 'userdetails', string?, string?], UserDetails> {
     user: string;
     usern: string;
     constructor(user: string) {
@@ -139,7 +141,7 @@ export class PSUserDetails extends PSRequest<['queryresponse', 'userdetails', st
         return data.userid == this.usern;
     }
 
-    buildResponse(m: this['T']): any {
+    buildResponse(m: this['T']): UserDetails {
         let copy = m.slice();
         let b = m[0] == 'queryresponse' && m[1] == 'userdetails';
         copy.splice(0, 2);

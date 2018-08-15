@@ -1,6 +1,6 @@
 import * as SockJS from 'sockjs-client';
 
-import { eventToPSMessages, GlobalEventsType, eventToPSBattleMessage, PSRequest, PSRoomRequest, EventsName, BattleEvents, GlobalEventsName, BattleEventsType, GlobalEvents, BattleEventsName } from './PSMessage';
+import { eventToPSMessages, GlobalEventsType, eventToPSBattleMessage, PSRequest, PSRoomRequest, EventsName, PSEvent, PSEventType } from './PSMessage';
 import { PSRoom } from './PSRoom';
 import { Player } from './Player';
 
@@ -13,15 +13,15 @@ export class PSConnection {
 	wscache: string[] = [];
 	iid?: NodeJS.Timer;
 	challstrraw: string = '';
-	eventqueue: GlobalEventsType[] = [];
+	eventqueue: PSEventType[] = [];
 	rooms: Map<string, PSRoom> = new Map<string, PSRoom>();
 	messagequeue: MessageEvent[] = [];
 	openprom?: () => void;
 	openrej?: () => void;
 	opened = false;
-	readprom?: { name?: EventsName, res: (ev: any) => void };
-	requests: ({ req: PSRequest<any>; res: (value?: any) => void; })[] = [];
-	roomrequests: ({ req: PSRoomRequest<any>; res: (value?: any) => void; })[] = [];
+	readprom?: { name?: EventsName, res: (ev: PSEventType) => void };
+	requests: ({ req: PSRequest<any, any>; res: (value?: any) => void; })[] = [];
+	roomrequests: ({ req: PSRoomRequest<any, any>; res: (value?: any) => void; })[] = [];
 
 	clear() {
 		this.iid && clearTimeout(this.iid);
@@ -30,7 +30,6 @@ export class PSConnection {
 		this.ws && this.ws.close();
 		this.ws = new SockJS('https://sim2.psim.us/showdown');
 		this.ws.onmessage = ev => {
-			console.log(ev);
 			if (ev.data[0] == '>') {
 				let { room, events } = eventToPSBattleMessage(ev);
 				this.roomrequests = this.roomrequests.filter(r => {
@@ -122,23 +121,15 @@ export class PSConnection {
 
 	// I want to impregnate type systems
 	read<T extends EventsName>(name?: T) {
-		return new Promise<
-			T extends GlobalEventsName ? GlobalEvents[T] :
-			T extends BattleEventsName ? BattleEvents[T] :
-			never>((res, rej) => {
-				if (this.eventqueue.length >= 1) {
-					let idx = this.eventqueue.findIndex(m => m[0] == name);
-					let elem = this.eventqueue.splice(idx, 1)[0];
-					let even: GlobalEventsType = elem;
-					return res(even as
-						T extends GlobalEventsName ? GlobalEvents[T] :
-						T extends BattleEventsName ? BattleEvents[T] :
-						never);
-				}
-				this.readprom = { name, res };
-			});
+		return new Promise<PSEvent[T]>((res, rej) => {
+			if (this.eventqueue.length >= 1) {
+				let idx = this.eventqueue.findIndex(m => m[0] == name);
+				let elem = this.eventqueue.splice(idx, 1)[0];
+				return res(elem as PSEvent[T]);
+			}
+			this.readprom = { name, res };
+		});
 	}
-
 	close() {
 		this.usable = false;
 		this.opened = false;
@@ -147,8 +138,8 @@ export class PSConnection {
 		this.ws.close();
 	}
 
-	request(req: PSRequest<any>): Promise<any> {
-		return new Promise<any>((res, rej) => {
+	request<T extends GlobalEventsType, R>(req: PSRequest<T, R>): Promise<R> {
+		return new Promise<R>((res, rej) => {
 			this.send(req.toString());
 			this.requests.push({ req, res });
 		})

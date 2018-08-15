@@ -21,7 +21,7 @@ export default class EndHandler extends BasicHandler {
     async win() {
         if (this.ia.battleData.dist == 0)
             for (let i = 0; i < 45; ++i) {
-                let data: UserDetails = await this.account.request(new PSUserDetails(this.ia.guessedChamp.showdown_name))
+                let data = await this.account.request(new PSUserDetails(this.ia.guessedChamp.showdown_name))
                 if (data.rooms === false)
                     break;
                 let rooms = Object.keys(data.rooms)
