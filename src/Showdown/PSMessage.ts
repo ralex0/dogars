@@ -74,7 +74,7 @@ export abstract class PSRoomRequest<T extends GlobalEventsType, R> extends PSReq
     room: string = '';
 }
 
-export class PSSaveBattleRequest extends PSRoomRequest<['queryresponse', string, string?, string?], {id: string, log: string}> {
+export class PSSaveBattleRequest extends PSRoomRequest<['queryresponse', string, string?, string?], { id: string, log: string }> {
     constructor(room: string) {
         super();
         this.room = room;
@@ -93,7 +93,7 @@ export class PSSaveBattleRequest extends PSRoomRequest<['queryresponse', string,
     }
 }
 
-export class PSCheckTeamRequest extends PSRequest<['popup', string], {failed: boolean, reasons: string[]}> {
+export class PSCheckTeamRequest extends PSRequest<['popup', string], { failed: boolean, reasons: string[] }> {
     format: string;
     constructor(format: string) {
         super();
@@ -105,9 +105,10 @@ export class PSCheckTeamRequest extends PSRequest<['popup', string], {failed: bo
     }
 
     buildResponse(m: this['T']) {
-        let res = m[1].split('||');
+        let data = m.filter(m => m != '');
+        let res = data.slice(1);
         let failed = res[0].indexOf('rejected') != -1;
-        let reasons = res.slice(2);
+        let reasons = res.slice(1);
         return { failed, reasons };
     }
 
