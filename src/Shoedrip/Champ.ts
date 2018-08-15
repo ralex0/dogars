@@ -1,8 +1,9 @@
 import { MemeStats } from "../Showdown/BattleData";
+import { BattleURL } from "../Backend/CringeCompilation";
 
 export class Champ {
 	avatar: string = '166';
-	current_battle: string = '';
+	current_battle?: BattleURL;
 	name: string = '';
 	trip: string = '';
 	showdown_name: string = '';

@@ -7,6 +7,8 @@ import { PSCheckTeamRequest, PSSaveBattleRequest } from '../Showdown/PSMessage';
 
 import { Sets } from '../Backend/Models/Sets';
 import { buildCheckableSet } from '../Backend/mongo';
+import { BattleURL } from '../Backend/CringeCompilation';
+import { RoomID } from '../Showdown/PSRoom';
 
 // Shamelessly stolen and adapted from showdown-client
 let BattleStatIDs: { [idx: string]: string } = {
@@ -177,10 +179,10 @@ export module pokeUtils {
         return null;
     }
 
-    export let saveReplay = async (url: string) => {
-        let room = url.match(/(battle-.*)\/?/)![0];
+    export let saveReplay = async (url: BattleURL) => {
+        let room = url.match(/(battle-.*)\/?/)![0] as RoomID;
         let roomid = url.match(/battle-(.*)\/?/)![1];
-
+        // maybe something wrong here
         connection.tryJoin(room);
         let req = new PSSaveBattleRequest(room);
         let data = await connection.request(req);

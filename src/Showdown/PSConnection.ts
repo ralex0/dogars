@@ -1,7 +1,7 @@
 import * as SockJS from 'sockjs-client';
 
 import { eventToPSMessages, GlobalEventsType, eventToPSBattleMessage, PSRequest, PSRoomRequest, EventsName, PSEvent, PSEventType } from './PSMessage';
-import { PSRoom } from './PSRoom';
+import { PSRoom, RoomID } from './PSRoom';
 import { Player } from './Player';
 
 import { logger } from '../Backend/logger';
@@ -51,21 +51,26 @@ export class PSConnection {
 				}
 			} else {
 				let mesgs = eventToPSMessages(ev);
+				// remove requests that where handled from the list
 				this.requests = this.requests.filter(r => {
 					let handled = false;
+					// remove messages that where handled by a request
 					mesgs = mesgs.filter(e => {
-						if (r.req.isResponse(e)) {
+						let h = r.req.isResponse(e);
+						if (h) {
 							handled = true;
 							r.res(r.req.buildResponse(e));
 						}
+						return !h;
 					});
-					let remove = mesgs.some(e => r.req.isResponse(e));
 					return !handled;
 				});
+				// if something is waiting to read...
 				if (this.readprom && (this.readprom.name === undefined || mesgs[0][0] == this.readprom.name)) {
 					this.readprom.res(mesgs.shift()!);
 					this.readprom = undefined;
 				}
+				// push messages that weren't handled yet
 				this.eventqueue.push(...mesgs);
 			}
 		};
@@ -99,7 +104,7 @@ export class PSConnection {
 		this.ws.send(data);
 	}
 
-	joinRoom(room: string): PSRoom {
+	joinRoom(room: RoomID): PSRoom {
 		if (this.rooms.has(room))
 			return this.rooms.get(room)!;
 		let ret: PSRoom = new PSRoom(this, room);

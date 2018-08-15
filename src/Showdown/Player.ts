@@ -6,6 +6,7 @@ import { PSRequest, PSEventType, GlobalEventsType } from './PSMessage';
 import fs = require('fs');
 import { settings } from '../Backend/settings';
 import { toId } from '../Website/utils';
+import { RoomID } from './PSRoom';
 let sids: { [key: string]: { sid: string, exp: number } } = {};
 
 let sidsfile = settings.ressources + '/sids.json';
@@ -148,7 +149,7 @@ export class Player {
 		this.con.send(`|/trn ${this.user},0,${assertion}`);
 	}
 
-	tryJoin(room: string) {
+	tryJoin(room: RoomID) {
 		return this.con.joinRoom(room);
 	}
 
@@ -156,20 +157,20 @@ export class Player {
 		return this.con.leaveRoom(room);
 	}
 
-	message(room: string, str: string) {
+	message(room: RoomID, str: string) {
 		this.tryJoin(room);
 		this.con.send(`${room}|${str}`);
 	}
 
-	forfeit(battle: string) {
+	forfeit(battle: RoomID) {
 		this.message(battle, '/forfeit');
 	}
 
 	setTeam(team: string) {
-		this.message('', `/utm ${team}`);
+		this.message('' as RoomID, `/utm ${team}`);
 	}
 
-	async getMyTeam(battle: string) {
+	async getMyTeam(battle: RoomID) {
 		this.tryJoin(battle);
 		if (this.teamCache && this.teamCache.has(battle))
 			return this.teamCache.get(battle);

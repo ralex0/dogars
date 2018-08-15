@@ -2,6 +2,10 @@ import * as puppeteer from "puppeteer";
 import fs = require('fs');
 import { settings } from "./settings";
 import { Cringer } from "./CringeProvider";
+import { Brand } from "../Showdown/PSMessage";
+
+export type BattleURL = Brand<string, 'BattleURL'>;
+
 
 let browser: puppeteer.Browser | null = null;
 let getBrowser = async () => {
@@ -11,11 +15,11 @@ let getBrowser = async () => {
 }
 
 export class CringCompilation {
-    battleLink: string;
+    battleLink: BattleURL;
     inited: boolean = false;
     browser?: puppeteer.Browser;
     page?: puppeteer.Page;
-    constructor(battleLink: string) {
+    constructor(battleLink: BattleURL) {
         this.battleLink = battleLink;
     }
 

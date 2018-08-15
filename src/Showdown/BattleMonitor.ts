@@ -1,6 +1,7 @@
-import { PSRoom } from './PSRoom';
+import { PSRoom, RoomID } from './PSRoom';
 import { Player } from './Player';
 import { BattleEvents, BattleEventsName } from './PSMessage';
+import { BattleURL } from '../Backend/CringeCompilation';
 
 export type BattleHandler = {
 	[key in BattleEventsName]?: (m: BattleEvents[key]) => Promise<void>
@@ -12,13 +13,13 @@ export class BattleMonitor {
 	room: PSRoom;
 	account: Player;
 	listeners: BattleHandler[] = [];
-	public url: string;
+	public url: BattleURL;
 
-	constructor(acc: Player, link: string) {
+	constructor(acc: Player, link: BattleURL) {
 		this.url = link;
 		this.account = acc;
 		console.log(link);
-		this.room = this.account.tryJoin(link.match(/(battle-.*)\/?/)![0]);
+		this.room = this.account.tryJoin(link.match(/(battle-.*)\/?/)![0] as RoomID);
 	}
 
 	attachListener(bl: BattleHandler) {

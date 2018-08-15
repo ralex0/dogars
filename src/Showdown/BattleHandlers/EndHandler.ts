@@ -4,6 +4,7 @@ import { snooze } from "../../Website/utils";
 import { PSUserDetails, UserDetails } from "../PSMessage";
 import InfoAggregator from "./InfoAggregator";
 import { monitorPlayer, champ } from "../../Shoedrip/shoedrip";
+import { BattleURL } from "../../Backend/CringeCompilation";
 
 export default class EndHandler extends BasicHandler {
     bm!: BattleMonitor;
@@ -29,7 +30,7 @@ export default class EndHandler extends BasicHandler {
                     .map(n => n.substr(1)) // remove the star
                     .filter(n => n > this.roomname); // newest rooms
                 if (rooms.length >= 1) {
-                    this.ia.guessedChamp.current_battle = `https://play.pokemonshowdown.com/${rooms[0]}`
+                    this.ia.guessedChamp.current_battle = `https://play.pokemonshowdown.com/${rooms[0]}` as BattleURL;
                     monitorPlayer(this.ia.guessedChamp);
                     break;
                 }

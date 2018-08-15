@@ -1,18 +1,30 @@
 import { toId } from "../Website/utils";
 
-export type PokemonIdent = string;
-export type Username = string;
-export type Ability = string;
-export type Effect = string;
-export type Stat = string;
-export type Move = string;
+export type Brand<K, T> = K & { __brand: T }
+
+type A = Brand<string, 'A'>;
+type B = Brand<string, 'B'>;
+
+let a: A = '' as A;
+//let b: B = a;
+let k: string = a;
+
+console.log(a);
+
+export type PokemonIdent = Brand<string, "PokemonIdent">;
+export type Username = Brand<string, "Username">;
+export type Ability = Brand<string, "Ability">;
+export type Effect = Brand<string, "Effect">;
+export type Stat = Brand<string, "Stat">;
+export type Move = Brand<string, "Move">;
+export type Message = Brand<string, "Message">;
 
 export type GlobalEvents = {
     updateuser: ['updateuser', Username, string],
     queryresponse: ['queryresponse', string, string?, string?],
-    popup: ['popup', string],
+    popup: ['popup', Message],
     formats: ['formats', string],
-    challstr: ['challstr', string],
+    challstr: ['challstr', '4', string],
     updatesearch: ['updatesearch', string],
 };
 
@@ -32,7 +44,7 @@ export type BattleEvents = {
     '-mega': ['-mega', PokemonIdent, string, string],
     '-miss': ['-miss', PokemonIdent, PokemonIdent],
     '-immune': ['-immune', PokemonIdent],
-    'inactive': ['inactive', string],
+    'inactive': ['inactive', Message],
     '-item': ['-item', PokemonIdent, string, string],
     'j': ['j', Username],
     'l': ['l', Username],
@@ -93,7 +105,7 @@ export class PSSaveBattleRequest extends PSRoomRequest<['queryresponse', string,
     }
 }
 
-export class PSCheckTeamRequest extends PSRequest<['popup', string], { failed: boolean, reasons: string[] }> {
+export class PSCheckTeamRequest extends PSRequest<['popup', Message], { failed: boolean, reasons: string[] }> {
     format: string;
     constructor(format: string) {
         super();

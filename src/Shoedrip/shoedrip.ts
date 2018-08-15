@@ -14,6 +14,7 @@ import GreetingHandler from '../Showdown/BattleHandlers/GreetingHandler';
 import HijackHandler from '../Showdown/BattleHandlers/HijackHandler';
 import InfoAggregator from '../Showdown/BattleHandlers/InfoAggregator';
 import Announcer from '../Showdown/BattleHandlers/Announcer';
+import { BattleURL } from '../Backend/CringeCompilation';
 
 export let champ: Champ = new Champ();
 export let cthread: { no?: number, tim?: number } = {};
@@ -64,22 +65,24 @@ let getCurrentChamp = async (thread: fchan.Thread) => {
 			  Dead hours
 			 */
             champ.deaddrip = curtime - champ.last_active < 120 * 60;
-            champ.current_battle = matches[0];
+            champ.current_battle = matches[0] as BattleURL;
             if (champ.current_battle[0] != 'h')
-                champ.current_battle = `https://${champ.current_battle}`;
+                champ.current_battle = `https://${champ.current_battle}` as BattleURL;
             return champ;
         }
     }
     return champ;
 }
 
-let oldbattle: string = '';
+let oldbattle: BattleURL | undefined;
 
 function timeOutPromise<T>(prom: Promise<T>, timeout: number): Promise<T> {
     return Promise.race([prom, new Promise<T>((res, rej) => setTimeout(rej, timeout, 'Timed out'))]);
 }
 
 export let monitorPlayer = (champ: Champ) => {
+    if (!champ.current_battle)
+        return;
     let bm = new BattleMonitor(connection, champ.current_battle);
     let ia = new InfoAggregator(champ);
     bm.attachListeners([
@@ -90,7 +93,7 @@ export let monitorPlayer = (champ: Champ) => {
         ia,
         //new HijackHandler(ia),
         new EndHandler(ia)
-    ]);                
+    ]);
     bm.monitor();
 }
 

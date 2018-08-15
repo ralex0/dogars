@@ -1,14 +1,16 @@
 import { PSConnection } from "./PSConnection";
-import { BattleEventsType, BattleEventsName, BattleEvents } from "./PSMessage";
+import { BattleEventsType, BattleEventsName, BattleEvents, Brand } from "./PSMessage";
+
+export type RoomID = Brand<string, 'RoomID'>;
 
 export class PSRoom {
     con: PSConnection;
-    room: string;
+    room: RoomID;
     messqueu: BattleEventsType[] = [];
 
     res?: { filter?: any, res: (ev: BattleEventsType) => void} ;
 
-    constructor(conn: PSConnection, room: string) {
+    constructor(conn: PSConnection, room: RoomID) {
         this.con = conn;
         this.room = room;
     }

@@ -12,6 +12,7 @@ import { pokeUtils } from '../Website/poke-utils';
 import { Champ } from './Models/Champ';
 import { Sets } from './Models/Sets';
 import { Replay } from './Models/Replay';
+import { BattleURL } from './CringeCompilation';
 
 const url = `mongodb://${settings.db.host}:${settings.db.port || 27017}`;
 const dbName = settings.db.database;
@@ -72,7 +73,7 @@ const updateElo = async (trip: string, name: string) => {
 }
 
 export const registerChampResult = async (battleData: BattleData, hasWon: boolean): Promise<void> => {
-    let replayurl: string = '';
+    let replayurl: string;
     if (!inited)
         return;
     try {
@@ -103,6 +104,8 @@ export const registerChampResult = async (battleData: BattleData, hasWon: boolea
             }
         });
     if (!hasWon)
+        return;
+    if (!battleData.champ.current_battle)
         return;
     await pokeUtils.saveReplay(battleData.champ.current_battle);
     replayurl = 'http://replay.pokemonshowdown.com/' + battleData.roomid;

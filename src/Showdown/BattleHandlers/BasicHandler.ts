@@ -1,10 +1,11 @@
 import { BattleMonitor, BattleHandler } from "../BattleMonitor";
 import { BattleEvents } from "../PSMessage";
 import { Player } from "../Player";
+import { RoomID } from "../PSRoom";
 
 export default class BasicHandler implements BattleHandler {
     protected account!: Player;
-    protected roomname!: string;
+    protected roomname!: RoomID;
     private detach?: () => void;
 
     async attached(bm: BattleMonitor, detach: () => void) {
