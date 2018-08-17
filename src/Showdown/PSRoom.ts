@@ -1,7 +1,7 @@
 import { PSConnection } from "./PSConnection";
-import { BattleEventsType, BattleEventsName, BattleEvents, Brand } from "./PSMessage";
+import { BattleEventsType, BattleEventsName, BattleEvents, As } from "./PSMessage";
 
-export type RoomID = Brand<string, 'RoomID'>;
+export type RoomID = string & As<'RoomID'>;
 
 export class PSRoom {
     con: PSConnection;

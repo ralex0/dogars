@@ -2,16 +2,51 @@ import BasicHandler from "./BasicHandler";
 import { BattleEvents } from "../PSMessage";
 import InfoAggregator from "./InfoAggregator";
 
+const pebbles = ['aggressive aggregate', 'astucious asphalt',
+    'buried boulders',
+    'charizard chipper', 'concealed cobblestone',
+    'deceiving deposit', 'disguised debris',
+    'elusive elements',
+    'furtive flint',
+    'guileful granite',
+    'hidden hornfels',
+    'insidious iridium', 'inconceivable iron',
+    'keen kryptonite',
+    'latent lead', 'lurking limestone',
+    'merciless minerals', 'metaphorical moth balls',
+    'ninja nuggets',
+    'obscure ore',
+    'pernicious pebbles',
+    'rusing radium', 'reclusive rocks',
+    'sacrilegious shards', 'shrouded sediment', 'smogon stones',
+    'terrorizing tectinics', 'tricky terrain',
+    'veiled variolite',
+    'zetetic zircon'
+];
+
+let shuffle = <T>(arr: Array<T>) => {
+    let currentIndex = arr.length, temporaryValue, randomIndex;
+    while (currentIndex != 0) {
+      randomIndex = ~~(Math.random() * currentIndex--);
+      temporaryValue = arr[currentIndex];
+      arr[currentIndex] = arr[randomIndex];
+      arr[randomIndex] = temporaryValue;
+    }
+    return arr;
+}
+
 export default class Announcer extends BasicHandler {
     private warned: boolean = false;
     ia: InfoAggregator;
+    pebbles: string[];
 
     constructor(ia: InfoAggregator) {
         super();
         this.ia = ia;
+        this.pebbles = shuffle(pebbles.slice());
     }
 
-    nummons: {p1: number, p2: number} = {p1: 0, p2: 0};
+    nummons: { p1: number, p2: number } = { p1: 0, p2: 0 };
     async teamsize(ts: BattleEvents['teamsize']) {
         let s: number = +ts[2];
         if (s < 6) {
@@ -44,6 +79,11 @@ export default class Announcer extends BasicHandler {
             this.turnFlags['scalder'] = m[1];
         } else if (m[2] == 'Fake Out') {
             this.turnFlags['fotarget'] = m[3];
+        } else if (m[2] == 'Stealth Rock') {
+            if (this.pebbles.length == 0)
+                this.pebbles = shuffle(pebbles.slice())                
+            let p = this.pebbles.splice(this.pebbles.length - 1, 1)[0];
+            this.account.message(this.roomname, p);
         }
     }
 

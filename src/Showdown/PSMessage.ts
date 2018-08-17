@@ -1,23 +1,14 @@
 import { toId } from "../Website/utils";
 
-export type Brand<K, T> = K & { __brand: T }
+export type As<T> = { __brand: T }
 
-type A = Brand<string, 'A'>;
-type B = Brand<string, 'B'>;
-
-let a: A = '' as A;
-//let b: B = a;
-let k: string = a;
-
-console.log(a);
-
-export type PokemonIdent = Brand<string, "PokemonIdent">;
-export type Username = Brand<string, "Username">;
-export type Ability = Brand<string, "Ability">;
-export type Effect = Brand<string, "Effect">;
-export type Stat = Brand<string, "Stat">;
-export type Move = Brand<string, "Move">;
-export type Message = Brand<string, "Message">;
+export type PokemonIdent = string & As<"PokemonIdent">;
+export type Username = string & As<"Username">;
+export type Ability = string & As<"Ability">;
+export type Effect = string & As<"Effect">;
+export type Stat = string & As<"Stat">;
+export type Move = string & As<"Move">;
+export type Message = string & As<"Message">;
 
 export type GlobalEvents = {
     updateuser: ['updateuser', Username, string],

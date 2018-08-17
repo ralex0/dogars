@@ -2,9 +2,9 @@ import * as puppeteer from "puppeteer";
 import fs = require('fs');
 import { settings } from "./settings";
 import { Cringer } from "./CringeProvider";
-import { Brand } from "../Showdown/PSMessage";
+import { As } from "../Showdown/PSMessage";
 
-export type BattleURL = Brand<string, 'BattleURL'>;
+export type BattleURL = string & As<'BattleURL'>;
 
 
 let browser: puppeteer.Browser | null = null;
