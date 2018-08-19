@@ -2,35 +2,37 @@ import BasicHandler from "./BasicHandler";
 import { BattleEvents } from "../PSMessage";
 import InfoAggregator from "./InfoAggregator";
 
-const pebbles = ['aggressive aggregate', 'astucious asphalt',
-    'buried boulders',
-    'charizard chipper', 'concealed cobblestone',
-    'deceiving deposit', 'disguised debris',
-    'elusive elements',
-    'furtive flint',
-    'guileful granite',
-    'hidden hornfels',
-    'insidious iridium', 'inconceivable iron',
-    'keen kryptonite',
-    'latent lead', 'lurking limestone',
-    'merciless minerals', 'metaphorical moth balls',
-    'ninja nuggets',
-    'obscure ore',
-    'pernicious pebbles',
-    'rusing radium', 'reclusive rocks',
-    'sacrilegious shards', 'shrouded sediment', 'smogon stones',
-    'terrorizing tectinics', 'tricky terrain',
-    'veiled variolite',
-    'zetetic zircon'
+const pebbles = ['Aggressive Aggregate', 'Astucious Asphalt',
+    'Buried Boulders',
+    'Charizard Chipper', 'Concealed cobblestone',
+    'Deceiving Deposit', 'Disguised debris',
+    'Elusive Elements',
+    'Furtive Flint',
+    'Guileful Granite',
+    'Hidden Hornfels',
+    'Insidious Iridium', 'Inconceivable Iron',
+    'Keen Kryptonite',
+    'Latent Lead', 'Lurking Limestone',
+    'Merciless Minerals', 'Metaphorical Moth Balls',
+    'Ninja Nuggets',
+    'Obscure Ore',
+    'Pernicious Pebbles',
+    'Rusing Radium', 'Reclusive Rocks',
+    'Sacrilegious Shards', 'Shrouded Sediment', 'Smogon Stones',
+    'Terrorizing Tectinics', 'Tricky Terrain',
+    'Veiled Variolite',
+    'Zetetic Zircon'
 ];
+
+let mpebbles: string[] = [];
 
 let shuffle = <T>(arr: Array<T>) => {
     let currentIndex = arr.length, temporaryValue, randomIndex;
     while (currentIndex != 0) {
-      randomIndex = ~~(Math.random() * currentIndex--);
-      temporaryValue = arr[currentIndex];
-      arr[currentIndex] = arr[randomIndex];
-      arr[randomIndex] = temporaryValue;
+        randomIndex = ~~(Math.random() * currentIndex--);
+        temporaryValue = arr[currentIndex];
+        arr[currentIndex] = arr[randomIndex];
+        arr[randomIndex] = temporaryValue;
     }
     return arr;
 }
@@ -38,12 +40,10 @@ let shuffle = <T>(arr: Array<T>) => {
 export default class Announcer extends BasicHandler {
     private warned: boolean = false;
     ia: InfoAggregator;
-    pebbles: string[];
 
     constructor(ia: InfoAggregator) {
         super();
         this.ia = ia;
-        this.pebbles = shuffle(pebbles.slice());
     }
 
     nummons: { p1: number, p2: number } = { p1: 0, p2: 0 };
@@ -80,10 +80,14 @@ export default class Announcer extends BasicHandler {
         } else if (m[2] == 'Fake Out') {
             this.turnFlags['fotarget'] = m[3];
         } else if (m[2] == 'Stealth Rock') {
-            if (this.pebbles.length == 0)
-                this.pebbles = shuffle(pebbles.slice())                
-            let p = this.pebbles.splice(this.pebbles.length - 1, 1)[0];
-            this.account.message(this.roomname, p);
+            if (mpebbles.length == 0)
+                mpebbles = shuffle(pebbles.slice())
+            let p = mpebbles.splice(mpebbles.length - 1, 1)[0];
+            let mon = m[1].substr(5);
+            if (Math.random() < 0.01)
+                this.account.message(this.roomname, `あいての ${mon}の **「${p}」**!`);
+            else
+                this.account.message(this.roomname, `The opposing ${mon} used **${p}**!`);
         }
     }
 
@@ -112,7 +116,17 @@ export default class Announcer extends BasicHandler {
         this.nummons[pl]--;
     }
 
+    async '-message'() {
+        this.turnFlags['ff'] = true;
+    }
+
     async win(w: BattleEvents['win']) {
+        if (this.turnFlags['ff']) {
+            this.account.message(this.roomname, 'bullied');
+            return;
+        }
+        if (Math.random() < 0.41)
+            return;
         let diff = this.nummons.p1 - this.nummons.p2;
         diff = diff < 0 ? -diff : diff;
         let mes = [
@@ -124,6 +138,9 @@ export default class Announcer extends BasicHandler {
             'no 6-0 bg',
             '6-0 bg hacker'
         ];
-        this.account.message(this.roomname, mes[diff]);
+        if (w[1].includes(this.ia.guessedChamp.showdown_name))
+            this.account.message(this.roomname, 'ez win gg ' + this.ia.guessedChamp.showdown_name);
+        else
+            this.account.message(this.roomname, mes[diff]);
     }
 }
