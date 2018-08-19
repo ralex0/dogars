@@ -11,7 +11,7 @@ export type Move = string & As<"Move">;
 export type Message = string & As<"Message">;
 
 export type GlobalEvents = {
-    updateuser: ['updateuser', Username, string],
+    updateuser: ['updateuser', Username, '1' | '0', string],
     queryresponse: ['queryresponse', string, string?, string?],
     popup: ['popup', Message],
     formats: ['formats', string],

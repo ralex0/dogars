@@ -10,11 +10,15 @@ export class MemeStats {
 export type playerAlias = 'p1' | 'p2';
 
 export class BattleData {
-	champ!: Champ;
+	champ: Champ;
 	dist: number = Infinity;
 	roomid: RoomID = '' as RoomID;
 	finished: boolean = false;
 	champ_alias?: playerAlias;
 	active_meme?: string;
 	memes: MemeStats[] = []
+
+	constructor(champ: Champ) {
+		this.champ = champ;
+	}
 }
