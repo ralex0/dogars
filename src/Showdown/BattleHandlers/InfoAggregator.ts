@@ -112,6 +112,6 @@ export default class InfoAggregator extends BasicHandler {
             }
         }
         this.battleData.finished = true;
-        this.guessedChamp.possible_names = ['p1', 'p2'].map(x => this.battlers.get(x as playerAlias)!.showdown_name);
+        this.guessedChamp.possible_names = [...this.battlers.entries()].map(ent => ent[1].showdown_name);
     }
 }
