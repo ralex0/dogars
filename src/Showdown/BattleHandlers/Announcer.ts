@@ -2,10 +2,11 @@ import BasicHandler from "./BasicHandler";
 import { BattleEvents } from "../PSMessage";
 import InfoAggregator from "./InfoAggregator";
 
-const pebbles = ['Aggressive Aggregate', 'Astucious Asphalt',
+const pebbles = [
+    'Aggressive Aggregate', 'Astucious Asphalt',
     'Buried Boulders',
-    'Charizard Chipper', 'Concealed cobblestone',
-    'Deceiving Deposit', 'Disguised debris',
+    'Charizard Chipper', 'Concealed Cobblestone',
+    'Deceiving Deposit', 'Disguised Debris',
     'Elusive Elements',
     'Furtive Flint',
     'Guileful Granite',
@@ -121,6 +122,7 @@ export default class Announcer extends BasicHandler {
     }
 
     async win(w: BattleEvents['win']) {
+        super.win(w);
         if (this.turnFlags['ff']) {
             this.account.message(this.roomname, 'bullied');
             return;

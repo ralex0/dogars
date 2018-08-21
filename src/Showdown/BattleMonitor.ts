@@ -34,7 +34,7 @@ export class BattleMonitor {
 	}
 
 	async monitor() {
-		while (this.listeners) {
+		while (this.listeners.length != 0) {
 			let event = await this.room.read();
 			this.listeners
 				.map(l => l[event[0]] && l[event[0]]!.bind(l))

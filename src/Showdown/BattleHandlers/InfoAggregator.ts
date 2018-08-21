@@ -101,14 +101,15 @@ export default class InfoAggregator extends BasicHandler {
         }
     }
 
-    async win(winner: BattleEvents['win']) {
+    async win(w: BattleEvents['win']) {
+        super.win(w);
         if (!this.battleData.champ_alias)
             return;
         let champdata = this.battlers.get(this.battleData.champ_alias);
         if (champdata) {
             this.battleData.memes = champdata.team;
             if (champdata.showdown_name) {
-                await registerChampResult(this.battleData, champdata.showdown_name == winner[1]);
+                await registerChampResult(this.battleData, champdata.showdown_name == w[1]);
             }
         }
         this.battleData.finished = true;

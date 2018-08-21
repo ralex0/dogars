@@ -1,7 +1,7 @@
 import BasicHandler from "./BasicHandler";
 import { BattleMonitor } from "../BattleMonitor";
 import { snooze } from "../../Website/utils";
-import { PSUserDetails, UserDetails } from "../PSMessage";
+import { PSUserDetails, UserDetails, BattleEvents } from "../PSMessage";
 import InfoAggregator from "./InfoAggregator";
 import { monitorPlayer, champ } from "../../Shoedrip/shoedrip";
 import { BattleURL } from "../../Backend/CringeCompilation";
@@ -19,7 +19,8 @@ export default class EndHandler extends BasicHandler {
         this.ia = ia;
     }
 
-    async win() {
+    async win(w: BattleEvents['win']) {
+        super.win(w);
         if (this.ia.battleData.dist == 0)
             for (let i = 0; i < 45; ++i) {
                 let data = await this.account.request(new PSUserDetails(this.ia.guessedChamp.showdown_name))
@@ -40,6 +41,5 @@ export default class EndHandler extends BasicHandler {
             console.log(`Didn't follow champ because`, this.ia.battleData, champ);
         }
         this.account.tryLeave(this.roomname);
-        this.bm.listeners = [];
     }
 }
