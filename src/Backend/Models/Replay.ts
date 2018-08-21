@@ -1,5 +1,4 @@
 import { Sets } from "./Sets";
-import { BattleURL } from "../CringeCompilation";
 
 export class Replay {
 
