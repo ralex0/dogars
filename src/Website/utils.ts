@@ -78,10 +78,3 @@ export let clamp = (min: number, val: number, max: number) => {
         return max;
     return val;
 }
-
-export let inverse = (o: any) => {
-    let r: any = {};
-    for (var k in o)
-        r[o[k]] = k;
-    return r;
-}

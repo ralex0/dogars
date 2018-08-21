@@ -31,6 +31,7 @@ let BattleStatIDs: { [idx: string]: string } = {
     spe: 'spe'
 };
 
+
 export module pokeUtils {
     // I'm never touching this.
     export let parseSet = (text: string) => {
@@ -143,29 +144,26 @@ export module pokeUtils {
         'x-requested-with': 'XMLHttpRequest'
     }
 
-    let replayq = 'a["|queryresponse|savereplay|';
-
     let pack = (set: Sets): string => {
-        let packed = `${set.name || ''}|`;
-        let attrs1 = ['species', 'item', 'ability'];
-        packed += attrs1.map(attr => `${toId(set[attr])}|`).join('');
-        packed += [1, 2, 3, 4]
-            .map(d => `move_${d}`)
-            .map(m => toId(set[m]))
-            .join(',') + '|';
-        packed += `${set.nature || ''}|`;
         let appstats = (n: string, def: number) =>
             ['hp', 'atk', 'def', 'spa', 'spd', 'spe']
                 .map(s => `${s}_${n}`)
                 .map(s => set[s] == def ? '' : set[s])
                 .join(',');
-        packed += `${appstats('ev', 0)}|`;
-        packed += `${set.gender || ''}|`;
-        packed += `${appstats('iv', 31)}|`;
-        if (set.shiny)
-            packed += 'S';
-        packed += `|${(set.level && set.level != 100) ? set.level : ''}|`;
-        packed += ((set.happiness && set.happiness < 255) ? set.happiness : '');
+        let packed = [
+            set.name,
+            ['species', 'item', 'ability'].map(attr => toId(set[attr])).join('|'),
+            [1, 2, 3, 4]
+                .map(m => toId(set[`move_${m}`]))
+                .join(','),
+            set.nature,
+            appstats('ev', 0),
+            set.gender,
+            appstats('iv', 31),
+            set.shiny && 'S',
+            set.level && set.level != 100 && set.level,
+            set.happiness && set.happiness < 255 && set.happiness
+        ].map(e => e ? e : '').join('|');
         return packed;
     }
 

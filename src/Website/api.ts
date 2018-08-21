@@ -101,12 +101,12 @@ api.delete('/sets/:id', async (request, response) => {
 });
 
 api.get('/champs', async (req, res) => {
-    let sort = 'wins';
     let allowed = ['wins', 'loses', 'elo', 'total', 'winrate', 'last_seen'];
+    let sort = allowed[0];
     if (allowed.includes(req.query.sort))
         sort = req.query.sort;
     let reversed = req.query.reverse == 'true';
-    let a = [{
+    let params: db.AggregationPipelineStage<Champ>[]  = [{
         $addFields: {
             total: {
                 $add: ['$wins', '$loses']
@@ -118,11 +118,9 @@ api.get('/champs', async (req, res) => {
             [sort]: reversed ? 1 : -1
         }
     }];
-    type t = keyof typeof a[0];
-    let params: db.AggregationPipelineStage<Champ>[] = a;
     if (req.query.name)
         params.unshift({
-            $match: new RegExp(req.query.name, 'i')
+            $match: { name: { $regex: req.query.name } }
         });
     let r = await paginate(db.ChampsCollection, params, +req.query.spp, +req.query.page);
     res.json(r);
