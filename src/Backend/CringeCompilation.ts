@@ -6,7 +6,6 @@ import { As } from "../Showdown/PSMessage";
 
 export type BattleURL = string & As<'BattleURL'>;
 
-
 let browser: puppeteer.Browser | null = null;
 let getBrowser = async () => {
     if (browser)
@@ -38,6 +37,7 @@ export class CringCompilation {
         lll = JSON.stringify(lll);
         await this.page.evaluate(`localStorage.setItem("showdown_prefs", '${lll}');`);
         this.inited = true;
+        console.log('page opened');
     }
 
     async snap() {
@@ -58,7 +58,9 @@ export class CringCompilation {
     }
 
     async cleanup() {
-        if (this.page)
+        if (this.page) {
             await this.page!.close();
+            console.log('page closed');
+        }
     }
 }

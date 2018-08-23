@@ -83,6 +83,9 @@ function timeOutPromise<T>(prom: Promise<T>, timeout: number): Promise<T> {
 export let monitorPlayer = (champ: Champ) => {
     if (!champ.current_battle)
         return;
+    if (champ.current_battle == oldbattle)
+        return;
+    oldbattle = champ.current_battle;
     let bm = new BattleMonitor(connection, champ.current_battle);
     let ia = new InfoAggregator(champ);
     bm.attachListeners([
@@ -103,8 +106,7 @@ export let shoestart = async () => {
             let thread = await timeOutPromise(getCurrentThread(), 30000);
             champ = await timeOutPromise(getCurrentChamp(thread), 30000);
             cthread = { no: thread.id, tim: thread.posts![0].tim! };
-            if (champ.current_battle != oldbattle && champ.active) {
-                oldbattle = champ.current_battle;
+            if (champ.active) {
                 monitorPlayer(champ);
             }
             if (champ.active) {

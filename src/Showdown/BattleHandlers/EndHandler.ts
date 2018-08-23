@@ -24,10 +24,10 @@ export default class EndHandler extends BasicHandler {
         if (this.ia.battleData.dist == 0)
             for (let i = 0; i < 45; ++i) {
                 let data = await this.account.request(new PSUserDetails(this.ia.guessedChamp.showdown_name))
-                if (data.rooms === false)
+                if (data.rooms === false) // offline
                     break;
                 let rooms = Object.keys(data.rooms)
-                    .filter(n => n.includes('☆')) // do not follow rooms
+                    .filter(n => n.includes('☆')) // do not follow rooms/spectating
                     .map(n => n.substr(1)) // remove the star
                     .filter(n => n > this.roomname); // newest rooms
                 if (rooms.length >= 1) {
