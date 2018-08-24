@@ -3,6 +3,7 @@ import fs = require('fs');
 import { settings } from "./settings";
 import { Cringer } from "./CringeProvider";
 import { As } from "../Showdown/PSMessage";
+import { getPackedSettings } from "http2";
 
 export type BattleURL = string & As<'BattleURL'>;
 
@@ -13,18 +14,25 @@ let getBrowser = async () => {
     return browser = await puppeteer.launch({ executablePath: '/usr/bin/chromium', args: ['--no-sandbox'] });
 }
 
+let page: puppeteer.Page | null = null;
+let getPage = async () => {
+    if (page)
+        return page;
+    if (!browser)
+        browser = await getBrowser();
+    return page = await browser.newPage();
+}
+
 export class CringCompilation {
     battleLink: BattleURL;
     inited: boolean = false;
-    browser?: puppeteer.Browser;
     page?: puppeteer.Page;
     constructor(battleLink: BattleURL) {
         this.battleLink = battleLink;
     }
 
     async init() {
-        this.browser = await getBrowser();
-        this.page = await this.browser.newPage();
+        this.page = await getPage();
         this.page.setViewport({ width: 831, height: 531 });
 
         await this.page.goto(this.battleLink);
