@@ -34,6 +34,7 @@ export class BattleMonitor {
 	}
 
 	async monitor() {
+		console.log('Started monitoring', this.room.room);
 		while (this.listeners.length != 0) {
 			let event = await this.room.read();
 			this.listeners
