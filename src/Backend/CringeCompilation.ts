@@ -64,11 +64,4 @@ export class CringCompilation {
         fs.renameSync(tmp, newfile);
         Cringer.pushNewCringe(len);
     }
-
-    async cleanup() {
-        if (this.page) {
-            await this.page!.close();
-            console.log('page closed');
-        }
-    }
 }

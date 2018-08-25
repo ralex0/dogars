@@ -15,11 +15,6 @@ export default class CringeHandler extends BasicHandler {
         this.ready = true;
     }
 
-    async win(w: BattleEvents['win']) {
-        super.win(w);
-        await this.compiler.cleanup();
-    }
-
     async c(m: BattleEvents['c']) {
         if (!this.ready)
             return;
