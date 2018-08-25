@@ -104,6 +104,8 @@ export class PSCheckTeamRequest extends PSRequest<['popup', Message], { failed: 
     }
 
     isResponse(m: this['T']): boolean {
+        if (m.length != 2)
+            return false;
         return m[1].indexOf('Your team') == 0;
     }
 
@@ -137,6 +139,8 @@ export class PSUserDetails extends PSRequest<['queryresponse', 'userdetails', st
     }
 
     isResponse(m: this['T']): boolean {
+        if (m.length < 3)
+            return false;
         let copy = m.slice();
         let b = m[0] == 'queryresponse' && m[1] == 'userdetails';
         copy.splice(0, 2);
