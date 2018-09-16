@@ -9,6 +9,7 @@ import { settings } from '../Backend/settings';
 
 export class PSConnection {
 	usable: boolean = false;
+	onstart?: () => Promise<void>;
 	ws?: WebSocket;
 	wscache: string[] = [];
 	iid?: NodeJS.Timer;
@@ -176,7 +177,6 @@ export class PSConnection {
 			challstr.shift();
 			this.challstrraw = challstr.join('|');
 			this.usable = true;
-
 			// heartbeat
 			this.iid = setInterval(() => this.send('/me dabs'), 1000 * 60);
 			if (!this.ws)
@@ -186,6 +186,7 @@ export class PSConnection {
 				this.close();
 				await this.start();
 			}, { once: true });
+			this.onstart && await this.onstart();
 		} catch (e) {
 			console.log('Something horribly wrong happened, disabled websocket', e);
 			this.close();

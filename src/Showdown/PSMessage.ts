@@ -1,9 +1,13 @@
 import { toId } from "../Website/utils";
+import { Player, upkeep, getassertion, LoginError } from "./Player";
+import { PSConnection } from "./PSConnection";
+import { settings } from "../Backend/settings";
 
 export type As<T> = { __brand: T }
 
 export type PokemonIdent = string & As<"PokemonIdent">;
 export type Username = string & As<"Username">;
+export type Avatar = string & As<"Avatar">;
 export type Ability = string & As<"Ability">;
 export type Effect = string & As<"Effect">;
 export type Stat = string & As<"Stat">;
@@ -11,7 +15,7 @@ export type Move = string & As<"Move">;
 export type Message = string & As<"Message">;
 
 export type GlobalEvents = {
-    updateuser: ['updateuser', Username, '1' | '0', string],
+    updateuser: ['updateuser', Username, '1' | '0', Avatar],
     queryresponse: ['queryresponse', string, string?, string?],
     popup: ['popup', Message],
     formats: ['formats', string],
@@ -145,8 +149,12 @@ export class PSUserDetails extends PSRequest<['queryresponse', 'userdetails', st
         let b = m[0] == 'queryresponse' && m[1] == 'userdetails';
         copy.splice(0, 2);
         let js = copy.join('|');
-        let data: UserDetails = JSON.parse(js);
-        return data.userid == this.usern;
+        try {
+            let data: UserDetails = JSON.parse(js);
+            return data.userid == this.usern;
+        } catch (e) {
+            return false;
+        }
     }
 
     buildResponse(m: this['T']): UserDetails {
@@ -160,6 +168,33 @@ export class PSUserDetails extends PSRequest<['queryresponse', 'userdetails', st
 
     toString(): string {
         return `|/cmd userdetails ${this.usern}`;
+    }
+}
+
+export class ConnectionRequest extends PSRequest<['updateuser', Username, "1" | "0", Avatar], boolean> {
+    user: string;
+    assertion: string;
+
+    constructor(user: string, assertion: string) {
+        super();
+        this.user = user;
+        this.assertion = assertion;
+    }
+
+    isResponse(m: this['T']): boolean {
+        if (m.length != 4)
+            return false;
+        return m[0] == 'updateuser';
+    }
+
+    buildResponse(m: this['T']): boolean {
+        if (m.length != 4)
+            return false;
+        return toId(m[1]) == toId(this.user);
+    }
+
+    toString(): string {
+        return `|/trn ${this.user},0,${this.assertion}`;
     }
 }
 

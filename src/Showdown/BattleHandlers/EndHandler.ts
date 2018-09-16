@@ -32,7 +32,9 @@ export default class EndHandler extends BasicHandler {
                     .filter(n => n > this.roomname); // newest rooms
                 if (rooms.length >= 1) {
                     this.ia.guessedChamp.current_battle = `https://play.pokemonshowdown.com/${rooms[0]}` as BattleURL;
+                    this.account.message(this.roomname, this.ia.guessedChamp.current_battle);
                     monitorPlayer(this.ia.guessedChamp);
+                    await snooze(1000);
                     break;
                 }
                 await snooze(1000);

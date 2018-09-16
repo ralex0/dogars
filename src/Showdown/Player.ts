@@ -2,18 +2,19 @@ import request = require('request-promise-native');
 
 import { PSConnection } from './PSConnection';
 import { ShowdownMon } from './ShowdownMon';
-import { PSRequest, PSEventType, GlobalEventsType } from './PSMessage';
+import { PSRequest, PSEventType, GlobalEventsType, ConnectionRequest } from './PSMessage';
 import fs = require('fs');
 import { settings } from '../Backend/settings';
 import { toId } from '../Website/utils';
 import { RoomID } from './PSRoom';
+
 let sids: { [key: string]: { sid: string, exp: number } } = {};
 
 let sidsfile = settings.ressources + '/sids.json';
 if (fs.existsSync(sidsfile))
 	sids = JSON.parse(fs.readFileSync(sidsfile).toString());
 
-enum LoginError {
+export enum LoginError {
 	ChallengeFailed,
 	UnexpectedResponse,
 	MalformedAssertion
@@ -109,44 +110,47 @@ export class Player {
 	}
 
 	async connect() {
+		this.con.onstart = async () => {
+			if (this.guest)
+				return;
+			let challstr: string = this.con.challstrraw;
+			let sid;
+
+			let now = Date.now();
+			if (sids[toId(this.user)]) {
+				if (sids[toId(this.user)].exp > +now) {
+					sid = sids[toId(this.user)].sid;
+				}
+			}
+			let assertion;
+			if (sid) {
+				try {
+					assertion = await upkeep(sid, challstr);
+				} catch (e) {
+					console.log('Failed to reuse sid, relogin in...', e);
+				}
+			}
+			if (!assertion) {
+				try {
+					[sid, assertion] = await getassertion(this.user!, this.pass, challstr);
+				} catch (e) {
+					console.log('threw', e);
+					if (e == LoginError.MalformedAssertion)
+						[sid, assertion] = await getassertion(this.user!, this.pass, challstr, settings.proxy);
+					else {
+						return;
+					}
+				}
+				let exp = now + 6 * 30 * 24 * 60 * 60 * 1000; // expires in 6 months
+				sids[toId(this.user)] = { sid, exp };
+				fs.writeFile(sidsfile, JSON.stringify(sids), () => console.log(`saved session for ${this.user}`));
+			}
+			let connected = await this.request(new ConnectionRequest(this.user!, assertion));
+			if (connected) {
+				console.log('Successfully logged in');
+			}
+		}
 		await this.con.start();
-		if (this.guest)
-			return;
-		let challstr: string = this.con.challstrraw;
-		let sid;
-
-		let now = Date.now();
-		if (sids[toId(this.user)]) {
-			if (sids[toId(this.user)].exp > +now) {
-				sid = sids[toId(this.user)].sid;
-			}
-		}
-
-		let assertion;
-		if (sid) {
-			try {
-				assertion = await upkeep(sid, challstr);
-			} catch(e) {
-				console.log('Failed to reuse sid, relogin in...', e);
-			}
-		}
-		if (!assertion) {
-			try {
-				throw LoginError.MalformedAssertion;
-				[sid, assertion] = await getassertion(this.user!, this.pass, challstr);
-			} catch (e) {
-				console.log('threw', e);
-				if (e == LoginError.MalformedAssertion)
-					[sid, assertion] = await getassertion(this.user!, this.pass, challstr, settings.proxy);
-				else
-					throw e;
-			}
-			let exp = now + 6 * 30 * 24 * 60 * 60 * 1000; // expires in 6 months
-			sids[toId(this.user)] = { sid, exp };
-			fs.writeFile(sidsfile, JSON.stringify(sids), () => console.log(`saved session for ${this.user}`));
-		}
-		console.log(sid, assertion);
-		this.con.send(`|/trn ${this.user},0,${assertion}`);
 	}
 
 	tryJoin(room: RoomID) {
