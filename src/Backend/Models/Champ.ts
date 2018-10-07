@@ -9,7 +9,7 @@ export class Champ {
     trip!: string;
     wins!: number;
     loses!: number;
-    avatar!: string;
+    avatar?: string;
     elo!: number;
     showdown_name!: string;
 }
