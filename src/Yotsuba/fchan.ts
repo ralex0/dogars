@@ -47,7 +47,6 @@ export namespace fchan {
         async getThread(): Promise<Thread> {
             let now = new Date();
             let b = await request.get({
-                headers: { 'If-Modified-Since': now.toUTCString() },
                 url: `http://a.4cdn.org/vp/thread/${this.no}.json`
             });
             b = JSON.parse(b);
