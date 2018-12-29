@@ -108,7 +108,7 @@ export class PSCheckTeamRequest extends PSRequest<['popup', Message], { failed: 
     }
 
     isResponse(m: this['T']): boolean {
-        if (m.length != 2)
+        if (m.length <= 1)
             return false;
         return m[1].indexOf('Your team') == 0;
     }

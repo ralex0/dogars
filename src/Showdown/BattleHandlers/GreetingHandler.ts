@@ -4,6 +4,8 @@ import { BattleEvents } from "../PSMessage";
 let banlist = [
     'ctrl',
     'close',
+    'alt',
+    'f4',
     'forfeit',
     'kill',
     'pedo',

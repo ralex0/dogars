@@ -110,7 +110,9 @@ export class Player {
 	}
 
 	async connect() {
+		console.log('STARTING CONNE');
 		this.con.onstart = async () => {
+			console.log('ONCONNE');
 			if (this.guest)
 				return;
 			let challstr: string = this.con.challstrraw;
@@ -132,6 +134,7 @@ export class Player {
 			}
 			if (!assertion) {
 				try {
+					console.log('ABOUT TO GET ASSERT');
 					[sid, assertion] = await getassertion(this.user!, this.pass, challstr);
 				} catch (e) {
 					console.log('threw', e);
@@ -151,6 +154,7 @@ export class Player {
 			}
 		}
 		await this.con.start();
+		console.log('AWAIT STARTING CONNE');
 	}
 
 	tryJoin(room: RoomID) {

@@ -80,6 +80,8 @@ export default class Announcer extends BasicHandler {
             this.turnFlags['scalder'] = m[1];
         } else if (m[2] == 'Fake Out') {
             this.turnFlags['fotarget'] = m[3];
+        } else if (m[2] == 'Baneful Bunker') {
+            this.account.message(this.roomname, 'Bane?');
         } else if (m[2] == 'Stealth Rock') {
             if (mpebbles.length == 0)
                 mpebbles = shuffle(pebbles.slice())

@@ -67,8 +67,11 @@ export class PSConnection {
 					});
 					return !handled;
 				});
+				// everything was consumed
+				if (mesgs.length == 0)
+					return;
 				// if something is waiting to read...
-				if (this.readprom && (this.readprom.name === undefined || mesgs[0][0] == this.readprom.name)) {
+				if (this.readprom && mesgs[0][0] == this.readprom.name) {
 					this.readprom.res(mesgs.shift()!);
 					this.readprom = undefined;
 				}
@@ -107,6 +110,8 @@ export class PSConnection {
 	}
 
 	joinRoom(room: RoomID): PSRoom {
+		if (room == '')
+			return new PSRoom(this, '' as RoomID);
 		if (this.rooms.has(room))
 			return this.rooms.get(room)!;
 		let ret: PSRoom = new PSRoom(this, room);
@@ -169,10 +174,11 @@ export class PSConnection {
 		try {
 			await this.open();
 
-			let user = await this.read('updateuser');
 			// don't care yet
+			let user = await this.read('updateuser');
 			let formats = await this.read('formats');
-			let rooms = await this.read('queryresponse');
+			// Hum what the fuck zarle?
+			// let rooms = await this.read('queryresponse');
 			let challstr = await this.read('challstr');
 			challstr.shift();
 			this.challstrraw = challstr.join('|');
