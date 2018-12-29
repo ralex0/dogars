@@ -50,7 +50,9 @@ let getCurrentChamp = async (thread: fchan.Thread) => {
             continue;
         if (!thread.posts![i].com)
             continue;
-        let content = thread.posts![i].com!.replace(/<(?:.|\n)*?>/gm, '');
+        let content = thread.posts![i].com!
+            .replace(/<(?:.|\n)*?>/gm, '')
+            .replace(/<wbr>/gm, '');
         let matches;
         if ((matches = content.match(/(https?:\/\/)?play.pokemonshowdown.com\/battle-(.*)-([0-9]+)/g))) {
             let curtime = ~~(+new Date() / 1000);
