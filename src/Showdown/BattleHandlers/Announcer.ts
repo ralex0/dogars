@@ -5,7 +5,7 @@ import InfoAggregator from "./InfoAggregator";
 const pebbles = [
     'Aggressive Aggregate', 'Astucious Asphalt',
     'Buried Boulders',
-    'Charizard Chipper', 'Concealed Cobblestone',
+    'Charizard Chipper', 'Concealed Cobblestone', 'Covert Corundum',
     'Deceiving Deposit', 'Disguised Debris',
     'Elusive Elements',
     'Furtive Flint',
