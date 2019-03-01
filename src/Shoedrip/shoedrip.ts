@@ -115,12 +115,11 @@ export let shoestart = async () => {
             if (champ.active) {
                 let dbchamp = await mongo.ChampsCollection.findOne({ trip: champ.trip });
                 champ.avatar = '166';
-                if (champ.avatar in BattleAvatarNumbers)
-                    champ.avatar = BattleAvatarNumbers[champ.avatar as keyof typeof BattleAvatarNumbers];
-                // todo, if avatar has a known filename
                 if (dbchamp) {
                     champ.avatar = dbchamp.avatar!;
                 }
+                if (champ.avatar in BattleAvatarNumbers)
+                    champ.avatar = BattleAvatarNumbers[champ.avatar as keyof typeof BattleAvatarNumbers];
             }
         }
         catch (e) {

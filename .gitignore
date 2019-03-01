@@ -7,3 +7,5 @@ built/*
 .vscode/*
 dogars.code-workspace
 public/*
+*.bson*
+*.gz
