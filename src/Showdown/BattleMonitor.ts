@@ -40,7 +40,7 @@ export class BattleMonitor {
 			this.listeners
 				.map(l => l[event[0]] && l[event[0]]!.bind(l))
 				.filter(f => f)
-				.forEach(f => f(event));
+				.forEach(f => f!(event as any));
 		}
 	}
 }

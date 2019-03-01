@@ -55,7 +55,7 @@ export type BattleEvents = {
     '-status': ['-status', PokemonIdent, string, string?],
     '-crit': ['-crit', PokemonIdent],
     'switch': ['switch', PokemonIdent, string],
-    'teamsize': ['teamsize', string],
+    'teamsize': ['teamsize', 'p1' | 'p2', string],
     'savereplay': ['savereplay'],
     'turn': ['turn', string]
 }

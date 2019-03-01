@@ -1,11 +1,18 @@
 import BasicHandler from "./BasicHandler";
 import { BattleEvents } from "../PSMessage";
 import InfoAggregator from "./InfoAggregator";
+import { MemeStats } from "../BattleData";
+
+const specials = {
+    'Charizard': 'Charizard Chipper',
+    'Volcarona': 'Volcarona Vitiater',
+    'Moltres': 'Moltres Mutiler',
+}
 
 const pebbles = [
     'Aggressive Aggregate', 'Astucious Asphalt',
     'Buried Boulders',
-    'Charizard Chipper', 'Concealed Cobblestone', 'Covert Corundum',
+    'Concealed Cobblestone', 'Covert Corundum',
     'Deceiving Deposit', 'Disguised Debris',
     'Elusive Elements',
     'Furtive Flint',
@@ -20,7 +27,7 @@ const pebbles = [
     'Pernicious Pebbles',
     'Rusing Radium', 'Reclusive Rocks',
     'Sacrilegious Shards', 'Shrouded Sediment', 'Smogon Stones',
-    'Terrorizing Tectinics', 'Tricky Terrain',
+    'Terrorizing Tectinics', 'Tricky Terrain', 'Talonflame Trimmer',
     'Veiled Variolite',
     'Zetetic Zircon'
 ];
@@ -61,6 +68,8 @@ export default class Announcer extends BasicHandler {
             return;
         if (i[1].includes(this.ia.guessedChamp.showdown_name))
             return;
+        if (i[1].includes('left'))
+            return;
         this.warned = true;
         this.account.message(this.roomname, `wtf turn that off`);
     }
@@ -79,6 +88,7 @@ export default class Announcer extends BasicHandler {
         } else if (m[2] == 'Scald') {
             this.turnFlags['scalder'] = m[1];
         } else if (m[2] == 'Fake Out') {
+            this.account.message(this.roomname, 'FREE');
             this.turnFlags['fotarget'] = m[3];
         } else if (m[2] == 'Baneful Bunker') {
             this.account.message(this.roomname, 'Bane?');
@@ -86,8 +96,12 @@ export default class Announcer extends BasicHandler {
             if (mpebbles.length == 0)
                 mpebbles = shuffle(pebbles.slice())
             let p = mpebbles.splice(mpebbles.length - 1, 1)[0];
+            let oppot = m[3].substr(0, 2) as 'p1' | 'p2';
+            let c_or_v: MemeStats | undefined;
+            if ((c_or_v = this.ia.battlers.get(oppot)!.team.find(mon => Object.keys(specials).includes(mon.name))))
+                p = specials[c_or_v.name as keyof typeof specials];
             let mon = m[1].substr(5);
-            if (Math.random() < 0.01)
+            if (Math.random() < 0.125)
                 this.account.message(this.roomname, `あいての ${mon}の **「${p}」**!`);
             else
                 this.account.message(this.roomname, `The opposing ${mon} used **${p}**!`);

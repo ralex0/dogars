@@ -15,6 +15,7 @@ import HijackHandler from '../Showdown/BattleHandlers/HijackHandler';
 import InfoAggregator from '../Showdown/BattleHandlers/InfoAggregator';
 import Announcer from '../Showdown/BattleHandlers/Announcer';
 import { BattleURL } from '../Backend/CringeCompilation';
+import { BattleAvatarNumbers } from './dexdata';
 
 export let champ: Champ = new Champ();
 export let cthread: { no?: number, tim?: number } = {};
@@ -85,7 +86,7 @@ function timeOutPromise<T>(prom: Promise<T>, timeout: number): Promise<T> {
 export let monitorPlayer = (champ: Champ) => {
     if (!champ.current_battle)
         return;
-    if (champ.current_battle == oldbattle)
+    if (oldbattle && champ.current_battle <= oldbattle)
         return;
     oldbattle = champ.current_battle;
     let bm = new BattleMonitor(connection, champ.current_battle);
@@ -114,6 +115,9 @@ export let shoestart = async () => {
             if (champ.active) {
                 let dbchamp = await mongo.ChampsCollection.findOne({ trip: champ.trip });
                 champ.avatar = '166';
+                if (champ.avatar in BattleAvatarNumbers)
+                    champ.avatar = BattleAvatarNumbers[champ.avatar as keyof typeof BattleAvatarNumbers];
+                // todo, if avatar has a known filename
                 if (dbchamp) {
                     champ.avatar = dbchamp.avatar!;
                 }
