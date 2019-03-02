@@ -77,7 +77,7 @@ let getCurrentChamp = async (thread: fchan.Thread) => {
     return champ;
 }
 
-let oldbattle: BattleURL | undefined;
+let oldid: number = 0;
 
 function timeOutPromise<T>(prom: Promise<T>, timeout: number): Promise<T> {
     return Promise.race([prom, new Promise<T>((res, rej) => setTimeout(rej, timeout, 'Timed out'))]);
@@ -86,9 +86,10 @@ function timeOutPromise<T>(prom: Promise<T>, timeout: number): Promise<T> {
 export let monitorPlayer = (champ: Champ) => {
     if (!champ.current_battle)
         return;
-    if (oldbattle && champ.current_battle <= oldbattle)
+    let id = +champ.current_battle.split('-').pop()!;
+    if (oldid && id <= oldid)
         return;
-    oldbattle = champ.current_battle;
+    oldid = id;
     let bm = new BattleMonitor(connection, champ.current_battle);
     let ia = new InfoAggregator(champ);
     bm.attachListeners([
