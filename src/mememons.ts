@@ -15,7 +15,7 @@ import { Cringer } from './Backend/CringeProvider';
 setInterval(async () => {
     let backup = `${settings.ressources}/public/backup.tar.gz`;
     await cp.spawnSync('mongodump', ['--db', settings.db.database, '--gzip', '-o', `${settings.ressources}/public`]);
-    await cp.spawnSync('tar', ['-czf', backup, `${settings.ressources}/${settings.db.database}`]);
+    await cp.spawnSync('tar', ['-czf', backup, `${settings.ressources}/public/${settings.db.database}`]);
 }, 3600 * 1000);
 
 console.log('Starting web server...');
