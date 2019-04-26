@@ -182,8 +182,6 @@ export class ConnectionRequest extends PSRequest<['updateuser', Username, "1" | 
     }
 
     isResponse(m: this['T']): boolean {
-        if (m.length != 4)
-            return false;
         return m[0] == 'updateuser';
     }
 
