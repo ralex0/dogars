@@ -13,6 +13,7 @@ import { commonPasswords } from '../commonPasswords';
 import { settings } from '../Backend/settings';
 import { ShowdownMon } from './ShowdownMon';
 import { RoomID } from './PSRoom';
+import InfoAggregator from './BattleHandlers/InfoAggregator';
 
 
 let fakechal = '4|034a2f187c98af6da8790273cb5314157d922e1c932aeb6538f5b4c3acdb88809ffdb03f053014e7795a8725d27de1ebdd782ff612484918d0aa43caeab7c66586c83b95f456ccb996b6a94e9aeaa66f18773d401915da8f3899d2715d1dae309ff49c6ff9306ad4ae109be871efd078b69bf19a1b7cccff14976282996668a6';
@@ -68,11 +69,11 @@ export class PlayerHijack {
 	account?: Player;
 	room: RoomID;
 	bd: BattleData;
-	constructor(battleData: BattleData, battlers: Map<String, Champ>) {
-		let alias = battleData.champ_alias![1] == '1' ? 'p2' : 'p1';
+	constructor(battleData: BattleData, battlers: InfoAggregator['battlers']) {
+		let alias: 'p1' | 'p2' = battleData.champ_alias![1] == '1' ? 'p2' : 'p1';
 		this.room = battleData.roomid;
-		this.bd = battleData;		
-		this.opponent = battlers.get(alias)!;
+		this.bd = battleData;
+		this.opponent = battlers[alias];
 	}
 
 	async tryJack(isRegged: boolean) {

@@ -3,6 +3,7 @@ import { RoomID } from './PSRoom';
 
 export class MemeStats {
 	name: string = '';
+	species: string = '';
 	kills: number = 0;
 	dead: boolean = false;
 }

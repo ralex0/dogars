@@ -46,7 +46,7 @@ export type BattleEvents = {
     'win': ['win', Username],
     'move': ['move', PokemonIdent, Move, PokemonIdent, string?],
     '-unboost': ['-unboost', PokemonIdent, Stat, string],
-    'poke': ['poke', string, string],
+    'poke': ['poke', 'p1' | 'p2', PokemonIdent, 'item' | ''],
     'rated': ['rated'],
     'request': ['request', string],
     'player': ['player', 'p1' | 'p2', Username, string],

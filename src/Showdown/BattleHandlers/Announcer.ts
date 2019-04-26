@@ -7,6 +7,7 @@ const specials = {
     'Charizard': 'Charizard Chipper',
     'Volcarona': 'Volcarona Vitiater',
     'Moltres': 'Moltres Mutiler',
+    'Talonflame': 'Talonflame Trimmer'
 }
 
 const pebbles = [
@@ -27,7 +28,7 @@ const pebbles = [
     'Pernicious Pebbles',
     'Rusing Radium', 'Reclusive Rocks',
     'Sacrilegious Shards', 'Shrouded Sediment', 'Smogon Stones',
-    'Terrorizing Tectinics', 'Tricky Terrain', 'Talonflame Trimmer',
+    'Terrorizing Tectinics', 'Tricky Terrain',
     'Veiled Variolite',
     'Zetetic Zircon'
 ];
@@ -94,12 +95,13 @@ export default class Announcer extends BasicHandler {
             this.account.message(this.roomname, 'Bane?');
         } else if (m[2] == 'Stealth Rock') {
             if (mpebbles.length == 0)
-                mpebbles = shuffle(pebbles.slice())
+                mpebbles = shuffle(pebbles.slice());
             let p = mpebbles.splice(mpebbles.length - 1, 1)[0];
             let oppot = m[3].substr(0, 2) as 'p1' | 'p2';
             let c_or_v: MemeStats | undefined;
-            if ((c_or_v = this.ia.battlers.get(oppot)!.team.find(mon => Object.keys(specials).includes(mon.name))))
-                p = specials[c_or_v.name as keyof typeof specials];
+            console.log(this.ia.battlers[oppot].team);
+            if ((c_or_v = this.ia.battlers[oppot].team.find(mon => Object.keys(specials).includes(mon.species))))
+                p = specials[c_or_v.species as keyof typeof specials];
             let mon = m[1].substr(5);
             if (Math.random() < 0.125)
                 this.account.message(this.roomname, `あいての ${mon}の **「${p}」**!`);

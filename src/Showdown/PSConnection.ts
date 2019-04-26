@@ -31,7 +31,6 @@ export class PSConnection {
 		this.ws && this.ws.close();
 		this.ws = new SockJS('https://sim2.psim.us/showdown');
 		this.ws.onmessage = ev => {
-			console.log(ev);
 			if (ev.data[0] == '>') {
 				let { room, events } = eventToPSBattleMessage(ev);
 				this.roomrequests = this.roomrequests.filter(r => {
@@ -105,7 +104,6 @@ export class PSConnection {
 	send(data: string | ArrayBufferLike | Blob | ArrayBufferView) {
 		if (!this.ws)
 			throw 'Attempted to send without initialized socket';
-		console.log(data);
 		this.ws.send(data);
 	}
 
