@@ -6,6 +6,7 @@ import { isRegged } from "../PlayerHijack";
 import { BattleEvents } from "../PSMessage";
 import { registerChampResult, init } from "../../Backend/mongo";
 import { RoomID } from "../PSRoom";
+import { BattleAvatarNumbers } from "../../Shoedrip/dexdata";
 
 export default class InfoAggregator extends BasicHandler {
     battlers: { [k in 'p1' | 'p2']: Champ } = {
@@ -25,9 +26,8 @@ export default class InfoAggregator extends BasicHandler {
 
     async poke(p: BattleEvents['poke']) {
         let battler = this.battlers[p[1]];
-
-        battler.team.push({species: p[2], name: '', dead: false, kills: 0});
-
+        let species = p[2].split(',')[0]; 
+        battler.team.push({species, name: '', dead: false, kills: 0});
     }
 
     init = 0;
@@ -36,6 +36,8 @@ export default class InfoAggregator extends BasicHandler {
             return;
         ++this.init;
         this.battlers[pl[1]].showdown_name = pl[2];
+        if (pl[3] in BattleAvatarNumbers)
+            pl[3] = BattleAvatarNumbers[pl[3] as keyof typeof BattleAvatarNumbers];
         this.battlers[pl[1]].avatar = pl[3];
 
         let dist = levenshtein(this.battleData.champ.name || '', pl[2]);
