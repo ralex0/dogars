@@ -33,6 +33,8 @@ const pebbles = [
     'Zetetic Zircon'
 ];
 
+let skillmessage = '👌😭 ahahah he did ìt again h0ly shit the💃AbIaZoLUTE💃MadMaN💃 IT JUST KEeps geeting FuNniER EVERy 🍆fucking🍑⏳TIme⌛ he flinches it haHAzhAHa 👌😭 📞 OPErATOR give mE The p👮Lice thEre’s a💃 MADmaN💃maKIN 🐸skill🐸 in oUr MIDsT and I CAN’T bREATHe 👌😨'
+
 let mpebbles: string[] = [];
 
 let shuffle = <T>(arr: Array<T>) => {
@@ -79,7 +81,11 @@ export default class Announcer extends BasicHandler {
         if (c[2] == 'flinch' || c[2] == 'par') {
             if (c[2] == 'flinch' && this.turnFlags['fotarget'] && this.turnFlags['fotarget'] == c[1])
                 return;
-            this.account.message(this.roomname, `nice skill`);
+            if (this.turnFlags['currentTurn'] == this.battleFlags.lastSkillTurn + 1) {
+                this.battleFlags.consecutiveSkill++;
+            }
+            this.battleFlags.lastSkillTurn = this.turnFlags['currentTurn'];
+            this.account.message(this.roomname, this.battleFlags.consecutiveSkill < 3 ? `nice skill` : skillmessage);
         }
     }
 
@@ -99,7 +105,6 @@ export default class Announcer extends BasicHandler {
             let p = mpebbles.splice(mpebbles.length - 1, 1)[0];
             let oppot = m[3].substr(0, 2) as 'p1' | 'p2';
             let c_or_v: MemeStats | undefined;
-            console.log(this.ia.battlers[oppot].team);
             if ((c_or_v = this.ia.battlers[oppot].team.find(mon => Object.keys(specials).includes(mon.species))))
                 p = specials[c_or_v.species as keyof typeof specials];
             let mon = m[1].substr(5);
@@ -119,8 +124,14 @@ export default class Announcer extends BasicHandler {
     }
 
     turnFlags: any = {};
+    battleFlags = {
+        consecutiveSkill: 0,
+        lastSkillTurn: 0 
+    };
+
     async turn(t: BattleEvents['turn']) {
         this.turnFlags = {};
+        this.turnFlags['currentTurn'] = +t[1];
     }
 
     async "-crit"(c: BattleEvents['-crit']) {
