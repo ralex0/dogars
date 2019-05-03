@@ -13,6 +13,7 @@ import { Champ } from './Models/Champ';
 import { Sets } from './Models/Sets';
 import { Replay } from './Models/Replay';
 import { BattleURL } from './CringeCompilation';
+import { BattleAvatarNumbers } from '../Shoedrip/dexdata';
 
 const url = `mongodb://${settings.db.host}:${settings.db.port || 27017}`;
 const dbName = settings.db.database;
@@ -70,6 +71,31 @@ const updateElo = async (trip: string, name: string) => {
                 showdown_name: name
             }
         });
+}
+
+export const rebuildChampAvatars = async () => {
+    let i = 0;
+    let j = 0;
+    let target = 10;
+    let champs = await ChampsCollection.find({}).toArray();
+    for (let c of champs) {
+        ++i;
+        if (c.avatar && c.avatar in BattleAvatarNumbers) {
+            ++j;
+            if ((i / champs.length) * 100 >= target) {
+                target += 10;
+                console.log(`${target}%...`)
+            }
+
+            c.avatar = BattleAvatarNumbers[c.avatar as keyof typeof BattleAvatarNumbers];
+            await ChampsCollection.updateOne({
+                trip: c.trip
+            }, {
+                    $set: { avatar: c.avatar }
+                });        
+        }
+    }
+
 }
 
 export const registerChampResult = async (battleData: BattleData, hasWon: boolean): Promise<void> => {
