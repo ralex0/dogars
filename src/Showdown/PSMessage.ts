@@ -1,7 +1,6 @@
 import { toId } from "../Website/utils";
-import { Player, upkeep, getassertion, LoginError } from "./Player";
-import { PSConnection } from "./PSConnection";
-import { settings } from "../Backend/settings";
+import { MessageEvent } from './suckjs';
+import { RoomID } from "./PSRoom";
 
 export type As<T> = { __brand: T }
 
@@ -21,6 +20,7 @@ export type GlobalEvents = {
     formats: ['formats', string],
     challstr: ['challstr', '4', string],
     updatesearch: ['updatesearch', string],
+    error: ['error', string]
 };
 
 export type BattleEvents = {
@@ -70,7 +70,7 @@ export type PSEvent = BattleEvents & GlobalEvents;
 export type EventsName = GlobalEventsName | BattleEventsName;
 export type PSEventType = PSEvent[EventsName];
 
-export abstract class PSRequest<T extends GlobalEventsType, R> {
+export abstract class PSRequest<T extends GlobalEventsType | BattleEventsType, R> {
     T!: T;
     abstract isResponse(m: GlobalEventsType | BattleEventsType): boolean;
     abstract buildResponse(m: T): R;
@@ -193,6 +193,30 @@ export class ConnectionRequest extends PSRequest<['updateuser', Username, "1" | 
 
     toString(): string {
         return `|/trn ${this.user},0,${this.assertion}`;
+    }
+}
+
+
+export class PSRoomMessageRequest extends PSRequest<['c', Username, string], boolean> {
+    room: RoomID;
+    str: string;
+
+    constructor(room: RoomID, str: string) {
+        super();
+        this.room = room;
+        this.str = str;
+    }
+
+    isResponse(m: this['T']): boolean {
+        return m[0] == 'c' && m[2] == this.str;
+    }
+
+    buildResponse(m: this['T']): boolean {
+        return true;
+    }
+
+    toString(): string {
+        return `${this.room}|${this.str}`;
     }
 }
 

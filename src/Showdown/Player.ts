@@ -2,11 +2,15 @@ import request = require('request-promise-native');
 
 import { PSConnection } from './PSConnection';
 import { ShowdownMon } from './ShowdownMon';
-import { PSRequest, PSEventType, GlobalEventsType, ConnectionRequest } from './PSMessage';
+import { PSRequest, PSEventType, GlobalEventsType, ConnectionRequest, PSRoomRequest, PSRoomMessageRequest, BattleEventsType } from './PSMessage';
 import fs = require('fs');
 import { settings } from '../Backend/settings';
 import { toId } from '../Website/utils';
 import { RoomID } from './PSRoom';
+import { Agent } from 'https';
+
+let httpsagent = require('https-proxy-agent');
+let socksagent = require('socks-proxy-agent');
 
 let sids: { [key: string]: { sid: string, exp: number } } = {};
 
@@ -54,7 +58,7 @@ export let upkeep = async (sid: string, challstr: string) => {
 	return body.assertion;
 }
 
-export let getassertion = async (user: string, pass: string | undefined, challenge: string, proxy?: string): Promise<[string, string]> => {
+export let getassertion = async (user: string, pass: string | undefined, challenge: string, proxy?: Agent): Promise<[string, string]> => {
 	let regged = pass !== undefined;
 	let data: LoginForm = new LoginForm();
 	let jar = request.jar();
@@ -70,7 +74,7 @@ export let getassertion = async (user: string, pass: string | undefined, challen
 	let body = await request.post('http://play.pokemonshowdown.com/action.php', {
 		form: data,
 		jar: jar,
-		proxy: proxy
+		agent: proxy
 	});
 	console.log('===========================', body);
 	if (body[0] == ';') {
@@ -90,6 +94,7 @@ export let getassertion = async (user: string, pass: string | undefined, challen
 	}
 	else if (body.length > 10)
 		return ['', body];
+	console.log(body);
 	throw LoginError.MalformedAssertion;
 }
 
@@ -100,21 +105,30 @@ export class Player {
 	sid?: string;
 	teamCache: Map<string, ShowdownMon[]> = new Map<string, ShowdownMon[]>();
 	guest = false;
+	agent?: Agent;
 
-	constructor(user?: string, pass?: string) {
-		this.con = new PSConnection();
+	constructor(user?: string, pass?: string, proxy?: string) {
+		console.log('createing', user);
 		let regged = pass !== undefined;
 		this.guest = !regged && user === undefined;
 		this.user = user;
 		this.pass = pass;
+
+		let agent: Agent | undefined;
+		if (proxy) {
+			if (proxy.indexOf('http') == 0)
+				agent = new httpsagent(proxy);
+			else
+				agent = new socksagent(proxy);
+
+		}
+		this.agent = agent;
+
+		this.con = new PSConnection(agent);
 	}
 
 	async connect() {
-		console.log('STARTING CONNE');
 		this.con.onstart = async () => {
-			console.log('ONCONNE');
-			if (this.guest)
-				return;
 			let challstr: string = this.con.challstrraw;
 			let sid;
 
@@ -124,7 +138,7 @@ export class Player {
 					sid = sids[toId(this.user)].sid;
 				}
 			}
-			let assertion;
+			let assertion: string | undefined;
 			if (sid) {
 				try {
 					assertion = await upkeep(sid, challstr);
@@ -134,14 +148,14 @@ export class Player {
 			}
 			if (!assertion) {
 				try {
-					console.log('ABOUT TO GET ASSERT');
-					[sid, assertion] = await getassertion(this.user!, this.pass, challstr);
+					console.log('getting ass for', this.user);
+					[sid, assertion] = await getassertion(this.user!, this.pass, challstr, this.agent);
 				} catch (e) {
-					console.log('threw', e);
+					console.log('failed getting ass for', this.user, e);
 					if (e == LoginError.MalformedAssertion)
-						[sid, assertion] = await getassertion(this.user!, this.pass, challstr, settings.proxy);
+						[sid, assertion] = await getassertion(this.user!, this.pass, challstr, this.agent);
 					else {
-						return;
+						throw new Error("Shit broke");
 					}
 				}
 				let exp = now + 6 * 30 * 24 * 60 * 60 * 1000; // expires in 6 months
@@ -165,8 +179,9 @@ export class Player {
 		return this.con.leaveRoom(room);
 	}
 
-	message(room: RoomID, str: string) {
+	async message(room: RoomID, str: string) {
 		this.tryJoin(room);
+		await this.request(new PSRoomMessageRequest(room, str));
 		this.con.send(`${room}|${str}`);
 	}
 
@@ -195,7 +210,7 @@ export class Player {
 		return this.teamCache.get(battle);
 	}
 
-	request<T extends GlobalEventsType, R>(req: PSRequest<T, R>) {
+	request<T extends GlobalEventsType | BattleEventsType, R>(req: PSRequest<T, R>) {
 		return this.con.request(req);
 	}
 

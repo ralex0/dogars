@@ -1,16 +1,18 @@
-import * as SockJS from 'sockjs-client';
+import { Agent } from 'https';
 
-import { eventToPSMessages, GlobalEventsType, eventToPSBattleMessage, PSRequest, PSRoomRequest, EventsName, PSEvent, PSEventType } from './PSMessage';
+import { eventToPSMessages, GlobalEventsType, eventToPSBattleMessage, PSRequest, PSRoomRequest, EventsName, PSEvent, PSEventType, BattleEventsType } from './PSMessage';
 import { PSRoom, RoomID } from './PSRoom';
 import { Player } from './Player';
 
 import { logger } from '../Backend/logger';
 import { settings } from '../Backend/settings';
+import { SuckJS } from './suckjs';
+
 
 export class PSConnection {
 	usable: boolean = false;
 	onstart?: () => Promise<void>;
-	ws?: WebSocket;
+	ws!: SuckJS;
 	wscache: string[] = [];
 	iid?: NodeJS.Timer;
 	challstrraw: string = '';
@@ -21,29 +23,21 @@ export class PSConnection {
 	openrej?: () => void;
 	opened = false;
 	readprom?: { name?: EventsName, res: (ev: PSEventType) => void };
-	requests: ({ req: PSRequest<any, any>; res: (value?: any) => void; })[] = [];
-	roomrequests: ({ req: PSRoomRequest<any, any>; res: (value?: any) => void; })[] = [];
+	requests: ({
+		req: PSRequest<any, any>; 
+		res: (value?: any) => void;
+		rej: (value?: any) => void;
+	})[] = [];
 
 	clear() {
 		this.iid && clearTimeout(this.iid);
 		this.usable = false;
 		this.opened = false;
 		this.ws && this.ws.close();
-		this.ws = new SockJS('https://sim2.psim.us/showdown');
+		this.ws = new SuckJS('https://sim2.psim.us/showdown', this.proxy);
 		this.ws.onmessage = ev => {
 			if (ev.data[0] == '>') {
 				let { room, events } = eventToPSBattleMessage(ev);
-				this.roomrequests = this.roomrequests.filter(r => {
-					let handled = false;
-					events = events.filter(e => {
-						if (r.req.room == room && r.req.isResponse(e)) {
-							handled = true;
-							r.res(r.req.buildResponse(e));
-						}
-					});
-					let remove = events.some(e => r.req.room == room && r.req.isResponse(e));
-					return !handled;
-				})
 				if (this.rooms.has(room)) {
 					if (events instanceof Array)
 						events.forEach(e => this.rooms.get(room)!.recv(e));
@@ -57,6 +51,10 @@ export class PSConnection {
 					let handled = false;
 					// remove messages that where handled by a request
 					mesgs = mesgs.filter(e => {
+						if (e[0] == 'error') {
+							r.rej(e[1]);
+							return false;
+						}
 						let h = r.req.isResponse(e);
 						if (h) {
 							handled = true;
@@ -97,7 +95,9 @@ export class PSConnection {
 		}
 	}
 
-	constructor() {
+	proxy?: Agent;
+	constructor(proxy?: Agent) {
+		this.proxy = proxy;
 		//this.clear();
 	}
 
@@ -140,6 +140,7 @@ export class PSConnection {
 			this.readprom = { name, res };
 		});
 	}
+
 	close() {
 		this.usable = false;
 		this.opened = false;
@@ -148,10 +149,10 @@ export class PSConnection {
 		this.ws.close();
 	}
 
-	request<T extends GlobalEventsType, R>(req: PSRequest<T, R>): Promise<R> {
+	request<T extends GlobalEventsType | BattleEventsType, R>(req: PSRequest<T, R>): Promise<R> {
 		return new Promise<R>((res, rej) => {
 			this.send(req.toString());
-			this.requests.push({ req, res });
+			this.requests.push({ req, res, rej });
 		})
 	}
 
@@ -185,11 +186,13 @@ export class PSConnection {
 			this.iid = setInterval(() => this.send('/me dabs'), 1000 * 60);
 			if (!this.ws)
 				throw 'Socket not initialized';
-			this.ws.addEventListener('close', async (ev) => {
-				logger.log(0, 'Socket was closed', ev.code, ev.reason);
+			this.ws.onclose = async (ev) => {
+				let bp = this.ws!.onclose;
+				this.ws!.onclose && this.ws!.onclose();
 				this.close();
 				await this.start();
-			}, { once: true });
+				this.ws!.onclose = bp;
+			};
 			this.onstart && await this.onstart();
 		} catch (e) {
 			console.log('Something horribly wrong happened, disabled websocket', e);
