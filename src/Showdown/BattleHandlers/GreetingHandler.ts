@@ -60,7 +60,7 @@ let testProxy = async (proxy: string) => {
 
 }
 
-let nextWorkingProxy = async () => {
+export let nextWorkingProxy = async (prune = true) => {
 	let proxies = proxyList();
 	let used: String = '';
 	try {
@@ -68,23 +68,19 @@ let nextWorkingProxy = async () => {
 		used = buff.toString();
 	} catch (e) {
 	}
-	console.log('fetching proxies...');
 	let p = await proxies.next();
-	console.log(p);
 	while (!p.done && !used.includes(p.value)) {
-		console.log('test,', p.value);
 		if (await testProxy(p.value)) {
-			console.log('passed')
 			break;
 		}
 		p = await proxies.next();
 	}
 	if (p.done) { // no proxies 
-		console.log('no proxies');
 		return;
 	}
 	let ret = p.value;
-	await fsp.writeFile(settings.ressources + '/used.txt', used + ret + '\n');
+	if (prune)
+		await fsp.writeFile(settings.ressources + '/used.txt', used + ret + '\n');
 	return ret;
 }
 

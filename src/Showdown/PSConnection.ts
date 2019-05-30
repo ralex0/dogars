@@ -7,6 +7,7 @@ import { Player } from './Player';
 import { logger } from '../Backend/logger';
 import { settings } from '../Backend/settings';
 import { SuckJS } from './suckjs';
+import { nextWorkingProxy } from './BattleHandlers/GreetingHandler';
 
 
 export class PSConnection {
@@ -24,7 +25,7 @@ export class PSConnection {
 	opened = false;
 	readprom?: { name?: EventsName, res: (ev: PSEventType) => void };
 	requests: ({
-		req: PSRequest<any, any>; 
+		req: PSRequest<any, any>;
 		res: (value?: any) => void;
 		rej: (value?: any) => void;
 	})[] = [];
@@ -208,7 +209,17 @@ let connection: Player;
 // connection = new PSConnection();
 
 // Named
-connection = new Player(settings.showdown.user, settings.showdown.pass);
-//connection.connect();
+(async () => {
+	let success = false;
+	do {
+		try {
+			connection = new Player(settings.showdown.user, settings.showdown.pass, await nextWorkingProxy(false));
+			await connection.connect();
+			success = true;
+		} catch (e) {
+		}
+	}
+	while (!success);
+})();
 
 export { connection };
