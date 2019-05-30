@@ -131,14 +131,14 @@ export class PSConnection {
 
 	// I want to impregnate type systems
 	read<T extends EventsName>(name?: T) {
-		return new Promise<PSEvent[T]>((res, rej) => {
+		return new Promise<PSEventType>((res, rej) => {
 			if (this.eventqueue.length >= 1) {
 				let idx = this.eventqueue.findIndex(m => m[0] == name);
 				let elem = this.eventqueue.splice(idx, 1)[0];
 				return res(elem as PSEvent[T]);
 			}
 			this.readprom = { name, res };
-		});
+		}) as any as PSEvent[T];
 	}
 
 	close() {

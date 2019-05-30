@@ -8,7 +8,7 @@ export class PSRoom {
     room: RoomID;
     messqueu: BattleEventsType[] = [];
 
-    res?: { filter?: any, res: (ev: BattleEventsType) => void} ;
+    res?: { filter?: BattleEventsName, res: (ev: BattleEventsType) => void} ;
 
     constructor(conn: PSConnection, room: RoomID) {
         this.con = conn;
@@ -25,14 +25,14 @@ export class PSRoom {
     }
 
     async read<T extends BattleEventsName>(filter?: T) : Promise<BattleEvents[T]> {
-        return new Promise<BattleEvents[T]>((res, rej) => {
+        return new Promise<BattleEventsType>((res, rej) => {
             if(this.messqueu.length >= 1) {
                 let idx = this.messqueu.findIndex(m => filter === undefined || m[0] == filter);
-                let a: BattleEvents[T] = this.messqueu.splice(idx, 1)[0]!;
+                let a: BattleEvents[T] = this.messqueu.splice(idx, 1)[0]! as any;
                 return res(a);
             }
             this.res = {filter, res};
-        });
+        }) as any;
     }
 
     send(data: string) {

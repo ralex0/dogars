@@ -120,7 +120,7 @@ api.get('/champs', async (req, res) => {
     }];
     if (req.query.name)
         params.unshift({
-            $match: { name: { $regex: req.query.name } }
+            $match: { name: new RegExp(req.query.name) }
         });
     let r = await paginate(db.ChampsCollection, params, +req.query.spp, +req.query.page);
     res.json(r);
