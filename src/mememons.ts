@@ -2,7 +2,7 @@ import fs = require('fs');
 import cp = require('child_process');
 import http = require('http');
 
-import { connection } from './Showdown/PSConnection';
+import { connection, findProxyDogarsChan } from './Showdown/PSConnection';
 
 import { shoestart } from './Shoedrip/shoedrip';
 
@@ -26,7 +26,7 @@ server.listen(+process.argv[2] || 1234, '0.0.0.0', async () => {
     console.log('Web server started, initializing database connection...');
     await mongo.init();
     console.log('Database connection started, initializing showdown connection...');
-    await connection.connect();
+    await findProxyDogarsChan();
     console.log('Showdown connection started, initializing showderp watch service...');
     shoestart();
 });

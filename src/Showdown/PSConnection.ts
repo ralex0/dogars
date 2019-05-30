@@ -209,7 +209,7 @@ let connection: Player;
 // connection = new PSConnection();
 
 // Named
-(async () => {
+export let findProxyDogarsChan = async () => {
 	let success = false;
 	do {
 		try {
@@ -220,6 +220,6 @@ let connection: Player;
 		}
 	}
 	while (!success);
-})();
+};
 
 export { connection };
