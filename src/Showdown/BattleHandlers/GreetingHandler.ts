@@ -140,11 +140,6 @@ export default class GreetingHandler extends BasicHandler {
 
 	async c(m: BattleEvents['c']) {
 		let norm = m[2].toLowerCase();
-		console.log(norm);
-		if (norm.includes('modtest')) {
-			console.log('init banter');
-			await this.banter();
-		}
 		if (banlist.find(w => m[1].includes(w)))
 			return;
 		if (!norm.includes('hi dogars-chan'))
