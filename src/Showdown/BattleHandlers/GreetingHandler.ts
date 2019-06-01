@@ -107,12 +107,12 @@ export default class GreetingHandler extends BasicHandler {
 				await snooze(1000);
 				for (let line of pasta) {
 					if (line != '') // empty lines are used for timings
-					ranpl.message(this.roomname, line);
+						ranpl.message(this.roomname, line);
 					await snooze(1000);
 				}
 				this.bantered = true;
 				ranpl.tryLeave(this.roomname);
-			} catch(e) {
+			} catch (e) {
 				ranpl.disconnect();
 				throw e;
 			}
@@ -130,12 +130,15 @@ export default class GreetingHandler extends BasicHandler {
 			this.hi.push(mes[1]);
 		}
 		if ('%@'.includes(mes[1][0])) {
-			await this.banter();
+			this.banter();
 		}
 	}
 
 	async c(m: BattleEvents['c']) {
 		let norm = m[2].toLowerCase();
+		if (norm == 'oh look, a janny') {
+			this.banter();
+		}
 		if (banlist.find(w => m[1].includes(w)))
 			return;
 		if (!norm.includes('hi dogars-chan'))
