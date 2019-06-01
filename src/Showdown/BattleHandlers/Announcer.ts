@@ -1,5 +1,5 @@
 import BasicHandler from "./BasicHandler";
-import { BattleEvents } from "../PSMessage";
+import { BattleEvents, PokemonIdent } from "../PSMessage";
 import InfoAggregator from "./InfoAggregator";
 import { MemeStats } from "../BattleData";
 
@@ -48,6 +48,11 @@ let shuffle = <T>(arr: Array<T>) => {
     return arr;
 }
 
+let greedmoves = ['Swords Dance', 'Dragon Dance',
+    'Agility', 'Acupressure', 'Calm Mind', 'Iron Defense',
+    'Shift Gear', 'Work Up', 'Bulk Up', 'Rock Polish',
+    'Nasty Plot', 'Quiver Dance']
+
 export default class Announcer extends BasicHandler {
     private warned: boolean = false;
     ia: InfoAggregator;
@@ -84,12 +89,23 @@ export default class Announcer extends BasicHandler {
             if (this.turnFlags['currentTurn'] == this.battleFlags.lastSkillTurn + 1) {
                 this.battleFlags.consecutiveSkill++;
             }
-            this.battleFlags.lastSkillTurn = this.turnFlags['currentTurn'];
+            this.battleFlags['lastSkillTurn'] = this.turnFlags['currentTurn'];
             this.account.message(this.roomname, this.battleFlags.consecutiveSkill < 3 ? `nice skill` : skillmessage);
         }
     }
 
     async move(m: BattleEvents['move']) {
+        let user = m[1];
+        let move = m[2];
+        let target = m[3];
+
+        if (greedmoves.includes(move)) {
+            this.battleFlags['greeder'] = user;
+            return;
+        }
+        if (user == this.battleFlags['greeder']) {
+            delete this.battleFlags['greeder'];
+        }
         if (m[3].includes('hoge') && m[4] && m[4] == '[miss]') {
             this.account.message(this.roomname, `HOGE! HOGE! H O G E!`);
         } else if (m[2] == 'Scald') {
@@ -123,15 +139,28 @@ export default class Announcer extends BasicHandler {
         }
     }
 
-    turnFlags: any = {};
-    battleFlags = {
-        consecutiveSkill: 0,
-        lastSkillTurn: 0 
-    };
+    async "switch"(s: BattleEvents['switch']) {
+        delete this.battleFlags['greeder'];
+    }
+
+    turnFlags: {
+        scalder?: PokemonIdent;
+        fotarget?: PokemonIdent;
+        currentTurn: number;
+        ff?: boolean;
+        critted?: PokemonIdent;
+    } = { currentTurn: 0 };
+    battleFlags: {
+        consecutiveSkill: number;
+        lastSkillTurn: number;
+        greeder?: PokemonIdent;
+    } = {
+            consecutiveSkill: 0,
+            lastSkillTurn: 0,
+        };
 
     async turn(t: BattleEvents['turn']) {
-        this.turnFlags = {};
-        this.turnFlags['currentTurn'] = +t[1];
+        this.turnFlags = { currentTurn: +t[1] };
     }
 
     async "-crit"(c: BattleEvents['-crit']) {
@@ -139,6 +168,8 @@ export default class Announcer extends BasicHandler {
     }
 
     async "faint"(c: BattleEvents['faint']) {
+        if (this.battleFlags['greeder'] == c[1])
+            this.account.message(this.roomname, 'nice greed, nerd');
         if (this.turnFlags['critted'] == c[1]) {
             this.account.message(this.roomname, 'crit mattered');
         }
