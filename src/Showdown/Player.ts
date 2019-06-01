@@ -41,6 +41,7 @@ export let upkeep = async (sid: string, challstr: string) => {
 	data.act = 'upkeep';
 	let body = await request.post('http://play.pokemonshowdown.com/action.php', {
 		form: data,
+		timeout: 10000,
 		headers: {
 			Cookie: `sid=${sid}`
 		}
@@ -58,7 +59,7 @@ export let upkeep = async (sid: string, challstr: string) => {
 	return body.assertion;
 }
 
-export let getassertion = async (user: string, pass: string | undefined, challenge: string, proxy?: Agent): Promise<[string, string]> => {
+export let _getassertion = async (user: string, pass: string | undefined, challenge: string, proxy?: Agent): Promise<[string, string]> => {
 	let regged = pass !== undefined;
 	let data: LoginForm = new LoginForm();
 	let jar = request.jar();
@@ -73,10 +74,10 @@ export let getassertion = async (user: string, pass: string | undefined, challen
 	}
 	let body = await request.post('http://play.pokemonshowdown.com/action.php', {
 		form: data,
+		timeout: 10000,
 		jar: jar,
 		agent: proxy
 	});
-	console.log('===========================', body);
 	if (body[0] == ';') {
 		throw LoginError.ChallengeFailed;
 	}
@@ -94,8 +95,16 @@ export let getassertion = async (user: string, pass: string | undefined, challen
 	}
 	else if (body.length > 10)
 		return ['', body];
-	console.log(body);
 	throw LoginError.MalformedAssertion;
+}
+
+export let getassertion = async (user: string, pass: string | undefined, challenge: string, proxy?: Agent): Promise<[string, string]> => { 
+	try {
+		return await _getassertion(user, pass, challenge, proxy);
+	} catch (e) {
+		console.log('ass failed, attempting without proxy...');
+		return await _getassertion(user, pass, challenge, undefined);
+	}
 }
 
 export class Player {

@@ -21,7 +21,7 @@ export class PSConnection {
 	rooms: Map<string, PSRoom> = new Map<string, PSRoom>();
 	messagequeue: MessageEvent[] = [];
 	openprom?: () => void;
-	openrej?: () => void;
+	openrej?: (d: Error) => void;
 	opened = false;
 	readprom?: { name?: EventsName, res: (ev: PSEventType) => void };
 	requests: ({
@@ -86,13 +86,13 @@ export class PSConnection {
 		this.ws.onclose = (e: Event) => {
 			this.opened = false;
 			this.usable = false;
-			this.openrej && this.openrej();
+			this.openrej && this.openrej(new Error(e.type));
 		}
 
 		this.ws.onerror = (e: Event) => {
 			this.opened = false;
 			this.usable = false;
-			this.openrej && this.openrej();
+			this.openrej && this.openrej(new Error(e.type));
 		}
 	}
 
@@ -217,6 +217,7 @@ export let findProxyDogarsChan = async () => {
 			await connection.connect();
 			success = true;
 		} catch (e) {
+			await nextWorkingProxy(true); // prune proxy
 		}
 	}
 	while (!success);
