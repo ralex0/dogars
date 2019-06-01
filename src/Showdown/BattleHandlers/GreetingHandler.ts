@@ -90,6 +90,7 @@ export default class GreetingHandler extends BasicHandler {
 	bantered = false;
 	bantering = false;
 	async banter() {
+		return;// disabled atm
 		if (this.bantered || this.bantering)
 			return;
 		this.bantering = true;
@@ -136,9 +137,6 @@ export default class GreetingHandler extends BasicHandler {
 
 	async c(m: BattleEvents['c']) {
 		let norm = m[2].toLowerCase();
-		if (norm == 'oh look, a janny') {
-			this.banter();
-		}
 		if (banlist.find(w => m[1].includes(w)))
 			return;
 		if (!norm.includes('hi dogars-chan'))

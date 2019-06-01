@@ -29,6 +29,7 @@ export class PSConnection {
 		res: (value?: any) => void;
 		rej: (value?: any) => void;
 	})[] = [];
+	errored = false;
 
 	clear() {
 		this.iid && clearTimeout(this.iid);
@@ -53,6 +54,7 @@ export class PSConnection {
 					// remove messages that where handled by a request
 					mesgs = mesgs.filter(e => {
 						if (e[0] == 'error') {
+							this.errored = true;
 							r.rej(e[1]);
 							return false;
 						}
@@ -105,6 +107,8 @@ export class PSConnection {
 	send(data: string | ArrayBufferLike | Blob | ArrayBufferView) {
 		if (!this.ws)
 			throw 'Attempted to send without initialized socket';
+		if (this.errored)
+			throw 'Socket is in an error state';
 		this.ws.send(data);
 	}
 
@@ -133,6 +137,8 @@ export class PSConnection {
 	// I want to impregnate type systems
 	read<T extends EventsName>(name?: T) {
 		return new Promise<PSEventType>((res, rej) => {
+			if (this.errored)
+				return rej('Socket is in an error state');
 			if (this.eventqueue.length >= 1) {
 				let idx = this.eventqueue.findIndex(m => m[0] == name);
 				let elem = this.eventqueue.splice(idx, 1)[0];
