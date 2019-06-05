@@ -48,7 +48,6 @@ export let changePassword = async (user: string, sid: string, op: string, np: st
 			Cookie: `showdown_username=${toId(user)}; sid=${sid}`
 		}
 	});
-	console.log(body);
 }
 
 export let isRegged = async (user: string) => {

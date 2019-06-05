@@ -102,7 +102,6 @@ export let getassertion = async (user: string, pass: string | undefined, challen
 	try {
 		return await _getassertion(user, pass, challenge, proxy);
 	} catch (e) {
-		console.log('ass failed, attempting without proxy...');
 		return await _getassertion(user, pass, challenge, undefined);
 	}
 }
@@ -117,7 +116,6 @@ export class Player {
 	agent?: Agent;
 
 	constructor(user?: string, pass?: string, proxy?: string) {
-		console.log('createing', user);
 		let regged = pass !== undefined;
 		this.guest = !regged && user === undefined;
 		this.user = user;
@@ -177,7 +175,6 @@ export class Player {
 			}
 		}
 		await this.con.start();
-		console.log('AWAIT STARTING CONNE');
 	}
 
 	tryJoin(room: RoomID) {

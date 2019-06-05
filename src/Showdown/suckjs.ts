@@ -27,7 +27,6 @@ export class SuckJS extends EventEmitter {
     }
 
     send(data: Parameters<ws['send']>[0]) {
-        console.log(data);
         this.sock.send('[' + JSON.stringify(data) + ']');
     }
 
@@ -36,7 +35,6 @@ export class SuckJS extends EventEmitter {
     }
 
     private postMessage(e: any) {
-        console.log(e);
         this.onmessage && this.onmessage({ data: e });
     }
 

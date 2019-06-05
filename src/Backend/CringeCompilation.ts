@@ -45,7 +45,6 @@ export class CringCompilation {
         lll = JSON.stringify(lll);
         await this.page.evaluate(`localStorage.setItem("showdown_prefs", '${lll}');`);
         this.inited = true;
-        console.log('page opened');
     }
 
     async snap() {

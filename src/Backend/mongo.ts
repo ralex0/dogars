@@ -109,9 +109,7 @@ export const registerChampResult = async (battleData: BattleData, hasWon: boolea
     }
     let inc = hasWon ? 'wins' : 'loses';
     let champ = await ChampsCollection.findOne({ trip: battleData.champ.trip });
-    console.log(champ);
     if (!champ) {
-        console.log('Champ', battleData.champ.name, 'not found, adding...');
         ChampsCollection.insertOne(new Champ(battleData.champ.name, battleData.champ.trip));
     }
     if (battleData.champ.avatar != '166')

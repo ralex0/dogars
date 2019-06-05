@@ -85,16 +85,16 @@ export class PSConnection {
 			this.openrej = undefined;
 		}
 
-		this.ws.onclose = (e: Event) => {
+		this.ws.onclose = (e?: Event) => {
 			this.opened = false;
 			this.usable = false;
-			this.openrej && this.openrej(new Error(e.type));
+			this.openrej && this.openrej(new Error(e && e.type));
 		}
 
-		this.ws.onerror = (e: Event) => {
+		this.ws.onerror = (e?: Event) => {
 			this.opened = false;
 			this.usable = false;
-			this.openrej && this.openrej(new Error(e.type));
+			this.openrej && this.openrej(new Error(e && e.type));
 		}
 	}
 
@@ -203,6 +203,10 @@ export class PSConnection {
 			this.onstart && await this.onstart();
 		} catch (e) {
 			console.log('Something horribly wrong happened, disabled websocket', e);
+			if (this.proxy) {
+				await findProxyDogarsChan();
+				return;
+			}
 			this.close();
 			await this.start();
 		}
@@ -219,8 +223,10 @@ export let findProxyDogarsChan = async () => {
 	let success = false;
 	do {
 		try {
-			connection = new Player(settings.showdown.user, settings.showdown.pass, await nextWorkingProxy(false));
+			let pr = await nextWorkingProxy(false);
+			connection = new Player(settings.showdown.user, settings.showdown.pass, pr);
 			await connection.connect();
+			console.log('Successfull connection with proxy ', pr);
 			success = true;
 		} catch (e) {
 			await nextWorkingProxy(true); // prune proxy
