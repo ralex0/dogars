@@ -175,7 +175,7 @@ export const updateSet = async (id: number, trip: string, info: { format: string
         "nu", "pu", "lc", "cap"];
     if (formats.includes(info.format))
         uset.format = info.format;
-    uset.description = info.desc.substr(0, 230);
+    uset.description = info.desc.substr(0, 650);
     let pok = pokeUtils.parseSet(info.set);
     pok.format = uset.format;
     for (let i in pok)
@@ -213,7 +213,7 @@ export const createNewSet = async (sdata: {
     if (formats.includes(sdata.format))
         nset.format = sdata.format;
     nset.creator = sdata.creat.substr(0, 23);
-    nset.description = sdata.desc.substr(0, 230);
+    nset.description = sdata.desc.substr(0, 650);
     let pok = pokeUtils.parseSet(sdata.set);
     pok.format = nset.format;
     let errors = await pokeUtils.checkSet(pok);

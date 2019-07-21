@@ -94,7 +94,7 @@ api.put('/sets/:id', async (request, response) => {
 api.delete('/sets/:id', async (request, response) => {
     try {
         await db.deleteSet(+request.params.id, request.body.trip);
-        response.json({});
+        response.json({ success: true });
     } catch (e) {
         response.status(400).json(e);
     }
@@ -106,7 +106,7 @@ api.get('/champs', async (req, res) => {
     if (allowed.includes(req.query.sort))
         sort = req.query.sort;
     let reversed = req.query.reverse == 'true';
-    let params: db.AggregationPipelineStage<Champ>[]  = [{
+    let params: db.AggregationPipelineStage<Champ>[] = [{
         $addFields: {
             total: {
                 $add: ['$wins', '$loses']

@@ -221,6 +221,10 @@ let connection: Player;
 // Named
 export let findProxyDogarsChan = async () => {
 	let success = false;
+	if (!settings.proxy) {
+		connection = new Player(settings.showdown.user, settings.showdown.pass);
+		return;
+	}
 	do {
 		try {
 			let pr = await nextWorkingProxy(false);
