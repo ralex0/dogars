@@ -53,7 +53,7 @@ export class PSConnection {
 					let handled = false;
 					// remove messages that where handled by a request
 					mesgs = mesgs.filter(e => {
-						if (e[0] == 'error' || e[1].startsWith('|modal|Your IP')) {
+						if (e[0] == 'error' || (e[1] && e[1].startsWith('|modal|Your IP'))) {
 							this.errored = true;
 							r.rej(e[1]);
 							return false;
