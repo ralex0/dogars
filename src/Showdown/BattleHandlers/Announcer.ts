@@ -121,6 +121,8 @@ export default class Announcer extends BasicHandler {
             let p = mpebbles.splice(mpebbles.length - 1, 1)[0];
             let oppot = m[3].substr(0, 2) as 'p1' | 'p2';
             let c_or_v: MemeStats | undefined;
+            if (!this.ia.battlers[oppot])
+                return;
             if ((c_or_v = this.ia.battlers[oppot].team.find(mon => Object.keys(specials).includes(mon.species))))
                 p = specials[c_or_v.species as keyof typeof specials];
             let mon = m[1].substr(5);
