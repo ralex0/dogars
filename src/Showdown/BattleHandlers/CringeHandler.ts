@@ -1,16 +1,17 @@
 import { BattleMonitor } from "../BattleMonitor";
-import { CringCompilation } from "../../Backend/CringeCompilation";
+import { CringeCompilation } from "../../Backend/CringeCompilation";
 import BasicHandler from "./BasicHandler";
 import { BattleEvents } from "../PSMessage";
+import { DogarsClient } from "../../DogarsClient";
 
 export default class CringeHandler extends BasicHandler {
-    private compiler!: CringCompilation;
+    private compiler!: CringeCompilation;
     private ready: boolean = false;
     private filter: { [k: string]: number } = {};
 
     async attached(bm: BattleMonitor, detach: () => void) {
         super.attached(bm, detach);
-        this.compiler = new CringCompilation(bm.url);
+        await DogarsClient.prepareCringe(bm.url);
         await this.compiler.init();
         this.ready = true;
     }
@@ -27,7 +28,11 @@ export default class CringeHandler extends BasicHandler {
         if (usertests >= 3)
             return;
         this.filter[m[1]] = usertests + 1;
-        await this.compiler.snap();
+        await DogarsClient.snap();
         this.account.message(this.roomname, "Yep. This one's going in my cringe compilation.");
+    }
+
+    async win() {
+        await DogarsClient.closeCringe();
     }
 }

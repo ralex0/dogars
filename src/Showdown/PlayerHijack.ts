@@ -92,7 +92,6 @@ export class PlayerHijack {
 			}
 			if (!this.account)
 				return;
-			//this.bot = new Player(settings.showdown.user, settings.showdown.pass);
 			await this.account.connect();
 			this.account.tryJoin(this.room);
 			await snooze(1000);

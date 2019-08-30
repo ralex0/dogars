@@ -13,7 +13,7 @@ export class BattleMonitor {
 	room: PSRoom;
 	account: Player;
 	listeners: BattleHandler[] = [];
-	public url: BattleURL;
+	url: BattleURL;
 
 	constructor(acc: Player, link: BattleURL) {
 		this.url = link;

@@ -33,7 +33,7 @@ tests.listen(1531, async () => {
         new DigitsChecker,
         new GreetingHandler,
         ia,
-        //        new HijackHandler(ia),
+        new HijackHandler(ia),
         new EndHandler(ia)
     ]);
     await bm.monitor();

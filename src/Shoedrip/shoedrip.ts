@@ -1,21 +1,12 @@
-import { BattleMonitor } from '../Showdown/BattleMonitor';
-
 import * as mongo from '../Backend/mongo';
 import { Champ } from './Champ';
 
 import { fchan } from '../Yotsuba/fchan';
 
 import { snooze } from '../Website/utils';
-import { connection } from '../Showdown/PSConnection';
-import CringeHandler from '../Showdown/BattleHandlers/CringeHandler';
-import DigitsChecker from '../Showdown/BattleHandlers/DigitsChecker';
-import EndHandler from '../Showdown/BattleHandlers/EndHandler';
-import GreetingHandler from '../Showdown/BattleHandlers/GreetingHandler';
-import HijackHandler from '../Showdown/BattleHandlers/HijackHandler';
-import InfoAggregator from '../Showdown/BattleHandlers/InfoAggregator';
-import Announcer from '../Showdown/BattleHandlers/Announcer';
 import { BattleURL } from '../Backend/CringeCompilation';
 import { BattleAvatarNumbers } from './dexdata';
+import { IPCServer } from '../Website/DogarsIPCServer';
 
 export let champ: Champ = new Champ();
 export let cthread: { no?: number, tim?: number } = {};
@@ -90,18 +81,7 @@ export let monitorPlayer = (champ: Champ) => {
     if (oldid && id <= oldid)
         return;
     oldid = id;
-    let bm = new BattleMonitor(connection, champ.current_battle);
-    let ia = new InfoAggregator(champ);
-    bm.attachListeners([
-        new Announcer(ia),
-        new CringeHandler,
-        new DigitsChecker,
-        new GreetingHandler,
-        ia,
-        //new HijackHandler(ia),
-        new EndHandler(ia)
-    ]);
-    bm.monitor();
+    IPCServer.askMonitor();
 }
 
 export let shoestart = async () => {

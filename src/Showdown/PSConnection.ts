@@ -1,14 +1,11 @@
 import { Agent } from 'https';
 
-import { eventToPSMessages, GlobalEventsType, eventToPSBattleMessage, PSRequest, PSRoomRequest, EventsName, PSEvent, PSEventType, BattleEventsType } from './PSMessage';
+import { eventToPSMessages, GlobalEventsType, eventToPSBattleMessage, PSRequest, EventsName, PSEvent, PSEventType, BattleEventsType } from './PSMessage';
 import { PSRoom, RoomID } from './PSRoom';
 import { Player } from './Player';
 
-import { logger } from '../Backend/logger';
-import { settings } from '../Backend/settings';
 import { SuckJS } from './suckjs';
-import { nextWorkingProxy } from './BattleHandlers/GreetingHandler';
-
+import { snooze } from '../Website/utils';
 
 export class PSConnection {
 	usable: boolean = false;
@@ -204,7 +201,7 @@ export class PSConnection {
 		} catch (e) {
 			console.log('Something horribly wrong happened, disabled websocket', e);
 			if (this.proxy) {
-				await findProxyDogarsChan();
+				await tryConnect();
 				return;
 			}
 			this.close();
@@ -219,21 +216,17 @@ let connection: Player;
 // connection = new PSConnection();
 
 // Named
-export let findProxyDogarsChan = async () => {
+export let tryConnect = async () => {
 	let success = false;
-	if (!settings.proxy) {
-		connection = new Player(settings.showdown.user, settings.showdown.pass);
-		return;
-	}
 	do {
 		try {
-			let pr = await nextWorkingProxy(false);
-			connection = new Player(settings.showdown.user, settings.showdown.pass, pr);
+			connection = new Player();
 			await connection.connect();
-			console.log('Successfull connection with proxy ', pr);
+			console.log('Successfull connection with proxy ');
 			success = true;
 		} catch (e) {
-			await nextWorkingProxy(true); // prune proxy
+			console.log('Connection failed, attempting again in 5 seconds...');
+			await snooze(5000);
 		}
 	}
 	while (!success);

@@ -23,7 +23,7 @@ let getPage = async () => {
     return page = await browser.newPage();
 }
 
-export class CringCompilation {
+export class CringeCompilation {
     battleLink: BattleURL;
     inited: boolean = false;
     page?: puppeteer.Page;
@@ -62,5 +62,9 @@ export class CringCompilation {
         let newfile = `${cringefolder}/${len}.png`
         fs.renameSync(tmp, newfile);
         Cringer.pushNewCringe(len);
+    }
+
+    done() {
+        return this.page!.close({runBeforeUnload: false});
     }
 }

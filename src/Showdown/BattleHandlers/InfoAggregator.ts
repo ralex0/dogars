@@ -7,6 +7,7 @@ import { BattleEvents } from "../PSMessage";
 import { registerChampResult, init } from "../../Backend/mongo";
 import { RoomID } from "../PSRoom";
 import { BattleAvatarNumbers } from "../../Shoedrip/dexdata";
+import { DogarsClient } from "../../DogarsClient";
 
 export default class InfoAggregator extends BasicHandler {
     battlers: { [k in 'p1' | 'p2']: Champ } = {
@@ -133,7 +134,7 @@ export default class InfoAggregator extends BasicHandler {
         if (champdata) {
             this.battleData.memes = champdata.team;
             if (champdata.showdown_name) {
-                await registerChampResult(this.battleData, champdata.showdown_name == w[1]);
+                await DogarsClient.registerChampResult(this.battleData, champdata.showdown_name == w[1]);
             }
         }
         this.battleData.finished = true;
