@@ -7,7 +7,7 @@ import { BattleURL } from './Backend/CringeCompilation';
 
 export class DogarsIPCClient {
     pass: string;
-    s = new SockJS('https://dogars.ml/cringep');
+    s = new SockJS('https://dogars.ml/ipc');
     message: AsyncIterableIterator<IPCCmd>;
     constructor(pass: string) {
         this.pass = pass;
