@@ -98,7 +98,7 @@ export let _getassertion = async (user: string, pass: string | undefined, challe
 	throw LoginError.MalformedAssertion;
 }
 
-export let getassertion = async (user: string, pass: string | undefined, challenge: string, proxy?: Agent): Promise<[string, string]> => { 
+export let getassertion = async (user: string, pass: string | undefined, challenge: string, proxy?: Agent): Promise<[string, string]> => {
 	try {
 		return await _getassertion(user, pass, challenge, proxy);
 	} catch (e) {
@@ -138,38 +138,42 @@ export class Player {
 		this.con.onstart = async () => {
 			let challstr: string = this.con.challstrraw;
 			let sid;
+			let connected = true;
 
-			let now = Date.now();
-			if (sids[toId(this.user)]) {
-				if (sids[toId(this.user)].exp > +now) {
-					sid = sids[toId(this.user)].sid;
-				}
-			}
-			let assertion: string | undefined;
-			if (sid) {
-				try {
-					assertion = await upkeep(sid, challstr);
-				} catch (e) {
-					console.log('Failed to reuse sid, relogin in...', e);
-				}
-			}
-			if (!assertion) {
-				try {
-					console.log('getting ass for', this.user);
-					[sid, assertion] = await getassertion(this.user!, this.pass, challstr, this.agent);
-				} catch (e) {
-					console.log('failed getting ass for', this.user, e);
-					if (e == LoginError.MalformedAssertion)
-						[sid, assertion] = await getassertion(this.user!, this.pass, challstr, this.agent);
-					else {
-						throw new Error("Shit broke");
+			if (this.user) {
+				let now = Date.now();
+				if (sids[toId(this.user)]) {
+					if (sids[toId(this.user)].exp > +now) {
+						sid = sids[toId(this.user)].sid;
 					}
 				}
-				let exp = now + 6 * 30 * 24 * 60 * 60 * 1000; // expires in 6 months
-				sids[toId(this.user)] = { sid, exp };
-				fs.writeFile(sidsfile, JSON.stringify(sids), () => console.log(`saved session for ${this.user}`));
+				let assertion: string | undefined;
+				if (sid) {
+					try {
+						assertion = await upkeep(sid, challstr);
+					} catch (e) {
+						console.log('Failed to reuse sid, relogin in...', e);
+					}
+				}
+				if (!assertion) {
+					try {
+						console.log('getting ass for', this.user);
+						[sid, assertion] = await getassertion(this.user!, this.pass, challstr, this.agent);
+					} catch (e) {
+						console.log('failed getting ass for', this.user, e);
+						if (e == LoginError.MalformedAssertion)
+							[sid, assertion] = await getassertion(this.user!, this.pass, challstr, this.agent);
+						else {
+							throw new Error("Shit broke");
+						}
+					}
+					let exp = now + 6 * 30 * 24 * 60 * 60 * 1000; // expires in 6 months
+					sids[toId(this.user)] = { sid, exp };
+					fs.writeFile(sidsfile, JSON.stringify(sids), () => console.log(`saved session for ${this.user}`));
+				}
+				connected = await this.request(new ConnectionRequest(this.user!, assertion));
 			}
-			let connected = await this.request(new ConnectionRequest(this.user!, assertion));
+
 			if (connected) {
 				console.log('Successfully logged in');
 			}
