@@ -5,6 +5,7 @@ import { PSUserDetails, UserDetails, BattleEvents } from "../PSMessage";
 import InfoAggregator from "./InfoAggregator";
 import { monitorPlayer, champ } from "../../Shoedrip/shoedrip";
 import { BattleURL } from "../../Backend/CringeCompilation";
+import { DogarsClient } from "../../DogarsClient";
 
 export default class EndHandler extends BasicHandler {
     bm!: BattleMonitor;
@@ -32,6 +33,7 @@ export default class EndHandler extends BasicHandler {
                     .filter(n => n > this.roomname); // newest rooms
                 if (rooms.length >= 1) {
                     this.ia.guessedChamp.current_battle = `https://play.pokemonshowdown.com/${rooms[0]}` as BattleURL;
+                    DogarsClient.setbattle(this.ia.guessedChamp.current_battle);
                     this.account.message(this.roomname, this.ia.guessedChamp.current_battle);
                     monitorPlayer(this.ia.guessedChamp);
                     await snooze(1000);

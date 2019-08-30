@@ -75,6 +75,13 @@ export class DogarsIPCClient {
             method: 'refresh'
         });
     }
+    
+    async setbattle(url: BattleURL) {
+        return await this.command<Champ>({
+            method: 'setbattle',
+            args: [url]
+        });
+    }
 
     async snap() {
         return await this.command<void>({

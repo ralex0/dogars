@@ -25,6 +25,9 @@ class DogarsIPCServer {
                     res = await registerChampResult.apply(null, req.args);
                 else if (req.method == 'refresh')
                     res = champ;
+                else if (req.method == 'setbattle') {
+                    champ.current_battle = req.args[0];
+                }
                 else if (req.method == 'snap') {
                     let cc = this.cringes[conn.id];
                     if (cc) {
