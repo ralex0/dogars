@@ -69,6 +69,12 @@ export class DogarsIPCClient {
             args: [data, won]
         });
     }
+    
+    async refresh() {
+        return await this.command<Champ>({
+            method: 'refresh'
+        });
+    }
 
     async snap() {
         return await this.command<void>({

@@ -20,8 +20,11 @@ class DogarsIPCServer {
             conn.on('data', async (m) => {
                 let req = JSON.parse(m);
                 let res;
+
                 if (req.method == 'registerChampResult')
                     res = await registerChampResult.apply(null, req.args);
+                else if (req.method == 'refresh')
+                    res = champ;
                 else if (req.method == 'snap') {
                     let cc = this.cringes[conn.id];
                     if (cc) {
