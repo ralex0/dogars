@@ -6,6 +6,7 @@ import InfoAggregator from "./InfoAggregator";
 import { monitorPlayer, champ } from "../../Shoedrip/shoedrip";
 import { BattleURL } from "../../Backend/CringeCompilation";
 import { DogarsClient } from "../../DogarsClient";
+import { monitor } from "../../dogars-chan";
 
 export default class EndHandler extends BasicHandler {
     bm!: BattleMonitor;
@@ -35,7 +36,7 @@ export default class EndHandler extends BasicHandler {
                     this.ia.guessedChamp.current_battle = `https://play.pokemonshowdown.com/${rooms[0]}` as BattleURL;
                     DogarsClient.setbattle(this.ia.guessedChamp.current_battle);
                     this.account.message(this.roomname, this.ia.guessedChamp.current_battle);
-                    monitorPlayer(this.ia.guessedChamp);
+                    monitor(this.ia.guessedChamp, this.account);
                     await snooze(1000);
                     break;
                 }

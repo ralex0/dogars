@@ -5,14 +5,12 @@ import { BattleEvents } from "../PSMessage";
 import { DogarsClient } from "../../DogarsClient";
 
 export default class CringeHandler extends BasicHandler {
-    private compiler!: CringeCompilation;
     private ready: boolean = false;
     private filter: { [k: string]: number } = {};
 
     async attached(bm: BattleMonitor, detach: () => void) {
         super.attached(bm, detach);
         await DogarsClient.prepareCringe(bm.url);
-        await this.compiler.init();
         this.ready = true;
     }
 

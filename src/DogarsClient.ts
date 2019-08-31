@@ -17,15 +17,13 @@ export class DogarsIPCClient {
         });
 
         let publish: (m: IPCCmd) => void;
-        this.message = asyncify(async (cb: (v: IPCCmd) => void) => {
-            publish = m => cb(m)
-        });
+        this.message = asyncify(async (cb: (v: IPCCmd) => void) => publish = m => cb(m));
 
         (async () => {
             for await (let mess of stream) {
                 let msg = JSON.parse(mess.data);
-                if (msg.id) {
-                    this.awaitingreplies[msg.id.id](msg.response);
+                if (msg.id !== undefined) {
+                    this.awaitingreplies[msg.id](msg.response);
                     delete this.awaitingreplies[msg.id.id];
                 } else {
                     publish!(msg as IPCCmd);

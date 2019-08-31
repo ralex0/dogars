@@ -21,6 +21,7 @@ class DogarsIPCServer {
                 let req = JSON.parse(m);
                 let res;
 
+                console.log(req);
                 if (req.method == 'registerChampResult')
                     res = await registerChampResult.apply(null, req.args);
                 else if (req.method == 'refresh')
@@ -44,8 +45,11 @@ class DogarsIPCServer {
                     this.cringes[conn.id] = cc;
                 }
 
-                if (req.method)
-                    conn.write(JSON.stringify({ id: req.id, response: res }));
+                if (req.method) {
+                    let repl = { id: req.id, response: res };
+                    console.log(repl);
+                    conn.write(JSON.stringify(repl));
+                }
             });
             conn.on('close', () => {
                 let idx = this.clients.findIndex(cli => cli.id == conn.id);

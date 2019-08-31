@@ -12,7 +12,8 @@ import { Champ } from './Shoedrip/Champ';
 
 console.log('Starting dogars-chan...');
 
-let monitor = async (champ: Champ, account: Player) => {
+export let monitor = (champ: Champ, account: Player) => {
+    console.log('Start monitor')
     let bm = new BattleMonitor(account, champ.current_battle!);
     let ia = new InfoAggregator(champ);
     bm.attachListeners([
@@ -34,6 +35,7 @@ let monitor = async (champ: Champ, account: Player) => {
 
     let dogarschan = new Player('dogars-chan' + ransuff(3));
     await dogarschan.connect();
+    console.log('Connected')
     monitor(await DogarsClient.refresh(), dogarschan);
     for await (let cmd of DogarsClient.messageStream()) {
         console.log(cmd);
