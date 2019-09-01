@@ -25,8 +25,12 @@ export default class HijackHandler extends BasicHandler {
 			if (this.attemptedJack)
 				return;
 			this.attemptedJack = true;
-			let hj = new PlayerHijack(this.ia.battleData!, this.ia.battlers);
-			hj.tryJack(oppo.regged);
+			try {
+				let hj = new PlayerHijack(this.ia.battleData!, this.ia.battlers);
+				hj.tryJack(oppo.regged);
+			} catch (e) {
+				console.log('failed to jack', e);
+			}
 		}
 	}
 
