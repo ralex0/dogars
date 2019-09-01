@@ -113,25 +113,15 @@ export class Player {
 	sid?: string;
 	teamCache: Map<string, ShowdownMon[]> = new Map<string, ShowdownMon[]>();
 	guest = false;
-	agent?: Agent;
 
-	constructor(user?: string, pass?: string, proxy?: string) {
+	constructor(user?: string, pass?: string) {
 		let regged = pass !== undefined;
 		this.guest = !regged && user === undefined;
 		this.user = user;
 		this.pass = pass;
 
 		let agent: Agent | undefined;
-		if (proxy) {
-			if (proxy.indexOf('http') == 0)
-				agent = new httpsagent(proxy);
-			else
-				agent = new socksagent(proxy);
-
-		}
-		this.agent = agent;
-
-		this.con = new PSConnection(agent);
+		this.con = new PSConnection();
 	}
 
 	async connect() {
@@ -158,11 +148,11 @@ export class Player {
 				if (!assertion) {
 					try {
 						console.log('getting ass for', this.user);
-						[sid, assertion] = await getassertion(this.user!, this.pass, challstr, this.agent);
+						[sid, assertion] = await getassertion(this.user!, this.pass, challstr);
 					} catch (e) {
 						console.log('failed getting ass for', this.user, e);
 						if (e == LoginError.MalformedAssertion)
-							[sid, assertion] = await getassertion(this.user!, this.pass, challstr, this.agent);
+							[sid, assertion] = await getassertion(this.user!, this.pass, challstr);
 						else {
 							throw new Error("Shit broke");
 						}

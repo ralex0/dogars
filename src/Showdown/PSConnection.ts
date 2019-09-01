@@ -4,13 +4,13 @@ import { eventToPSMessages, GlobalEventsType, eventToPSBattleMessage, PSRequest,
 import { PSRoom, RoomID } from './PSRoom';
 import { Player } from './Player';
 
-import { SuckJS } from './suckjs';
+import SockJS = require('sockjs-client');
 import { snooze } from '../Website/utils';
 
 export class PSConnection {
 	usable: boolean = false;
 	onstart?: () => Promise<void>;
-	ws!: SuckJS;
+	ws!: WebSocket;
 	wscache: string[] = [];
 	iid?: NodeJS.Timer;
 	challstrraw: string = '';
@@ -33,7 +33,7 @@ export class PSConnection {
 		this.usable = false;
 		this.opened = false;
 		this.ws && this.ws.close();
-		this.ws = new SuckJS('https://sim2.psim.us/showdown', this.proxy);
+		this.ws = new SockJS('https://sim2.psim.us/showdown');
 		this.ws.onmessage = ev => {
 			if (ev.data[0] == '>') {
 				let { room, events } = eventToPSBattleMessage(ev);
@@ -90,9 +90,7 @@ export class PSConnection {
 		}
 	}
 
-	proxy?: Agent;
-	constructor(proxy?: Agent) {
-		this.proxy = proxy;
+	constructor() {
 		//this.clear();
 	}
 
@@ -186,19 +184,12 @@ export class PSConnection {
 			if (!this.ws)
 				throw 'Socket not initialized';
 			this.ws.onclose = async (ev) => {
-				let bp = this.ws!.onclose;
-				this.ws!.onclose && this.ws!.onclose();
 				this.close();
 				await this.start();
-				this.ws!.onclose = bp;
 			};
 			this.onstart && await this.onstart();
 		} catch (e) {
 			console.log('Something horribly wrong happened, disabled websocket', e);
-			if (this.proxy) {
-				await tryConnect();
-				return;
-			}
 			this.close();
 			await this.start();
 		}
